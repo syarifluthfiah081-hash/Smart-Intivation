@@ -1,248 +1,221 @@
 import React, { useState, useEffect } from 'react';
-import { db, seedDefaultSettings, type SchoolSettings, type GeneratedLetter } from '../services/db';
-import { LETTER_SCHEMAS, formatIndonesianDate } from '../templates';
-import { 
-  FileText, 
-  Archive, 
-  Plus, 
-  School, 
-  ChevronRight, 
-  Sparkles,
-  Calendar
-} from 'lucide-react';
+import { getLetterHistory, getSchoolProfile } from '../services/storage';
+import type { GeneratedLetter } from '../services/storage';
+import { letterTemplates } from '../templates/letterTemplates';
+import type { User } from '../services/auth';
+import { FileText, ArrowRight, School, Printer, Award, Loader2 } from 'lucide-react';
+import { formatDateIndo } from '../templates/letterTemplates';
 
 interface DashboardProps {
-  setCurrentTab: (tab: string) => void;
-  setSelectedLetterType?: (type: any) => void; // If they click a quick letter template, set the generator type
+  user: User;
+  onNavigateToTab: (tab: 'create-letter' | 'master-data' | 'history', templateId?: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ 
-  setCurrentTab,
-  setSelectedLetterType 
-}) => {
-  const [settings, setSettings] = useState<SchoolSettings | null>(null);
-  const [letterCount, setLetterCount] = useState(0);
-  const [recentLetters, setRecentLetters] = useState<GeneratedLetter[]>([]);
+export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigateToTab }) => {
+  const [history, setHistory] = useState<GeneratedLetter[]>([]);
+  const [schoolName, setSchoolName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadDashboardData() {
+    const fetchDashboardData = async () => {
       try {
-        const schoolData = await seedDefaultSettings();
-        setSettings(schoolData);
-
-        const totalLetters = await db.letters.count();
-        setLetterCount(totalLetters);
-
-        const letters = await db.letters.orderBy('id').reverse().limit(5).toArray();
-        setRecentLetters(letters);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
+        const [historyData, profileData] = await Promise.all([
+          getLetterHistory(),
+          getSchoolProfile(),
+        ]);
+        setHistory(historyData);
+        setSchoolName(profileData.schoolName);
+      } catch (err) {
+        console.error('Gagal mengambil data dashboard:', err);
       } finally {
         setLoading(false);
       }
-    }
-    loadDashboardData();
+    };
+    fetchDashboardData();
   }, []);
 
-  const handleQuickCreate = (type: any) => {
-    if (setSelectedLetterType) {
-      setSelectedLetterType(type);
-    }
-    setCurrentTab('generator');
-  };
+  const stats = [
+    {
+      label: 'Total Surat Diterbitkan',
+      value: history.length,
+      icon: FileText,
+      color: 'bg-blue-50 text-blue-600 border-blue-100',
+    },
+    {
+      label: 'Jenis Dokumen Aktif',
+      value: letterTemplates.length,
+      icon: Award,
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    },
+    {
+      label: 'Nama Instansi Terdaftar',
+      value: schoolName || 'Belum Diatur',
+      icon: School,
+      color: 'bg-amber-50 text-amber-600 border-amber-100',
+      isText: true,
+    },
+  ];
 
-  const getBadgeColor = (type: string) => {
-    switch (type) {
-      case 'skl': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'undangan': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-      case 'tugas': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'pengantar': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'rekomendasi': return 'bg-purple-50 text-purple-700 border-purple-200';
-      case 'pindahan': return 'bg-rose-50 text-rose-700 border-rose-200';
-      default: return 'bg-slate-50 text-slate-700 border-slate-200';
-    }
-  };
+  // Ambil 3 surat terakhir untuk ringkasan aktivitas
+  const recentLetters = history.slice(0, 3);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <p className="text-xs text-slate-500 font-semibold animate-pulse">Memuat data dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-6 px-4 space-y-8 pb-16">
-      {/* Welcome Banner */}
-      <div className="relative bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white overflow-hidden shadow-xl border border-indigo-900/30">
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 flex items-center justify-center pointer-events-none">
-          <School size={200} className="text-white" />
-        </div>
+    <div className="space-y-6">
+      {/* Welcome Banner Card */}
+      <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+        {/* Background decorative geometry */}
+        <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none translate-x-12 -translate-y-12"></div>
         
-        <div className="relative z-10 space-y-3 max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold border border-indigo-500/30 animate-pulse">
-            <Sparkles size={12} />
-            Sistem Pembuat Surat Sekolah Otomatis
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Selamat Datang di Portal Persuratan
-          </h1>
-          <p className="text-slate-300 text-sm md:text-base leading-relaxed">
-            Kelola dokumen, surat tugas, rekomendasi, dan undangan sekolah secara cepat, rapi, dan otomatis berdasarkan template standar kedinasan.
+        <div className="relative z-10 space-y-2 max-w-xl">
+          <span className="text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+            Sistem Siap Digunakan
+          </span>
+          <h2 className="text-xl md:text-2xl font-extrabold tracking-tight">
+            Selamat Datang Kembali, {user.fullName}!
+          </h2>
+          <p className="text-xs text-blue-100/90 leading-relaxed">
+            Anda masuk sebagai <strong className="capitalize text-white">{user.role}</strong> sekolah <strong>{schoolName || 'SMA NEGERI 1 MERDEKA'}</strong>. Gunakan pintasan di bawah untuk mencetak dokumen surat dinas secara otomatis.
           </p>
-          
-          {settings && (
-            <div className="pt-2 flex items-center gap-2 text-indigo-300 font-bold text-xs uppercase tracking-wider">
-              <School size={16} />
-              <span>{settings.schoolName}</span>
-              <span className="text-slate-500">|</span>
-              <span>NPSN: {settings.npsn}</span>
+        </div>
+      </div>
+
+      {/* Stats Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm"
+            >
+              <div className={`p-3 rounded-xl border ${stat.color} flex-shrink-0`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  {stat.label}
+                </span>
+                <h3 className={`font-extrabold tracking-tight mt-0.5 ${
+                  stat.isText ? 'text-sm text-slate-800 truncate' : 'text-2xl text-slate-800'
+                }`}>
+                  {stat.value}
+                </h3>
+              </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Quick shortcuts to letter templates */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+            Pilih Template Dokumen & Surat
+          </h3>
+          <button
+            onClick={() => onNavigateToTab('create-letter')}
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+          >
+            <span>Semua Template</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {letterTemplates.map(template => (
+            <button
+              key={template.id}
+              onClick={() => onNavigateToTab('create-letter', template.id)}
+              className="bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-2xl p-5 text-left transition-all duration-200 group flex flex-col justify-between h-40 shadow-sm cursor-pointer"
+            >
+              <div className="bg-slate-50 group-hover:bg-blue-50 border border-slate-200 group-hover:border-blue-100 p-2.5 rounded-xl w-fit text-slate-600 group-hover:text-blue-600 transition-colors">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                  {template.name}
+                </h4>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Format Dinas A4 / F4
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activity (History Preview) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">
+            Aktivitas Terakhir (Riwayat Cetak)
+          </h3>
+          {history.length > 0 && (
+            <button
+              onClick={() => onNavigateToTab('history')}
+              className="text-xs font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
+            >
+              <span>Lihat Riwayat Lengkap</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
-      </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Stat 1: Total Letters */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow">
-          <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600">
-            <FileText size={24} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Surat Dibuat</p>
-            <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{letterCount}</h3>
-          </div>
-        </div>
-
-        {/* Stat 2: Active Templates */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow">
-          <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600">
-            <Archive size={24} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Arsip Tersimpan</p>
-            <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{letterCount}</h3>
-          </div>
-        </div>
-
-        {/* Stat 3: School Profile Settings status */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-shadow">
-          <div className="p-4 bg-amber-50 rounded-2xl text-amber-600">
-            <School size={24} />
-          </div>
-          <div className="flex-grow">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Profil Sekolah</p>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-sm font-extrabold text-slate-800 truncate max-w-[150px]">
-                {settings?.schoolName ? 'Profil Aktif' : 'Belum Diatur'}
-              </span>
-              <button 
-                onClick={() => setCurrentTab('settings')}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5"
-              >
-                Ubah <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Action and History Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Quick Letter Templates (Left 2/3 on Desktop) */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <span>Pilih Template Surat</span>
-          </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Object.values(LETTER_SCHEMAS).map((schema) => (
-              <button
-                key={schema.id}
-                onClick={() => handleQuickCreate(schema.id)}
-                className="bg-white hover:bg-slate-50 border border-slate-100 hover:border-indigo-100 text-left p-5 rounded-2xl shadow-sm hover:shadow transition-all group flex items-start gap-4 cursor-pointer"
-              >
-                <div className={`p-3 rounded-xl border flex-shrink-0 ${getBadgeColor(schema.id)}`}>
-                  <FileText size={20} />
-                </div>
-                <div className="space-y-1 overflow-hidden">
-                  <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors text-sm truncate">
-                    {schema.title}
-                  </h4>
-                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                    {schema.description}
-                  </p>
-                  <div className="text-[10px] text-slate-400 font-mono mt-2 pt-1 border-t border-slate-50">
-                    Format: {schema.defaultRefPattern}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Letters List (Right 1/3 on Desktop) */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-800">Arsip Terkini</h2>
-            <button 
-              onClick={() => setCurrentTab('history')}
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5"
+        {recentLetters.length === 0 ? (
+          <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl">
+            <Printer className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-slate-400">Belum ada surat yang diterbitkan.</p>
+            <button
+              onClick={() => onNavigateToTab('create-letter')}
+              className="text-[11px] font-bold text-blue-600 hover:text-blue-700 mt-1 cursor-pointer"
             >
-              Lihat Semua <ChevronRight size={14} />
+              Buat Surat Pertama Sekarang
             </button>
           </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-100">
-            {recentLetters.length > 0 ? (
-              recentLetters.map((letter) => (
-                <div key={letter.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
-                  <div className="space-y-1 overflow-hidden">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase ${getBadgeColor(letter.type)}`}>
-                      {letter.type}
-                    </span>
-                    <h5 className="font-bold text-slate-800 text-xs truncate" title={letter.title}>
-                      {letter.recipientName || 'Tanpa Nama'}
-                    </h5>
-                    <p className="text-[10px] text-slate-400 font-mono truncate">
-                      {letter.refNumber}
-                    </p>
-                    <div className="flex items-center gap-1 text-[9px] text-slate-400">
-                      <Calendar size={10} />
-                      <span>{formatIndonesianDate(letter.createdAt)}</span>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => {
-                      if (setSelectedLetterType) setSelectedLetterType(letter.type);
-                      // Set search param or load directly to edit
-                      // For now, let's navigate to history where they can trigger actions, or Generator with pre-loaded values
-                      handleQuickCreate(letter.type);
-                    }}
-                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all flex-shrink-0"
-                    title="Edit/Gunakan Kembali"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="p-8 text-center text-slate-400 text-sm flex flex-col items-center justify-center">
-                <FileText size={36} className="text-slate-200 mb-2" />
-                <span>Belum ada surat dibuat.</span>
-                <button
-                  onClick={() => handleQuickCreate('skl')}
-                  className="mt-3 text-xs font-semibold text-indigo-600 hover:underline flex items-center gap-1"
-                >
-                  Buat Surat Sekarang <ChevronRight size={12} />
-                </button>
-              </div>
-            )}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-400 uppercase font-semibold">
+                  <th className="py-2.5">Jenis Dokumen</th>
+                  <th className="py-2.5">Nomor Surat</th>
+                  <th className="py-2.5">Ditujukan Kepada</th>
+                  <th className="py-2.5">Tanggal Dibuat</th>
+                  <th className="py-2.5 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentLetters.map(letter => (
+                  <tr key={letter.id} className="border-b border-slate-100 text-slate-700 hover:bg-slate-50 transition-colors">
+                    <td className="py-3 font-semibold text-slate-800">{letter.typeName}</td>
+                    <td className="py-3 font-mono">{letter.refNumber}</td>
+                    <td className="py-3">{letter.recipientName}</td>
+                    <td className="py-3 text-slate-500">{formatDateIndo(letter.dateCreated)}</td>
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => onNavigateToTab('history')}
+                        className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer"
+                      >
+                        Lihat Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,89 +1,83 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  FileEdit, 
-  Archive, 
-  Settings, 
-  School,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import { LayoutDashboard, FileSpreadsheet, PlusCircle, History, LogOut, User as UserIcon, Shield } from 'lucide-react';
+import type { User } from '../services/auth';
+
+export type ActiveTab = 'dashboard' | 'master-data' | 'create-letter' | 'history';
 
 interface SidebarProps {
-  currentTab: string;
-  setCurrentTab: (tab: string) => void;
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
+  activeTab: ActiveTab;
+  setActiveTab: (tab: ActiveTab) => void;
+  user: User;
+  onLogout: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  currentTab,
-  setCurrentTab,
-  collapsed,
-  setCollapsed,
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user, onLogout }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'generator', label: 'Buat Surat', icon: FileEdit },
-    { id: 'history', label: 'Arsip Surat', icon: Archive },
-    { id: 'settings', label: 'Pengaturan Sekolah', icon: Settings },
-  ];
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+    { id: 'master-data', name: 'Profil Sekolah', icon: FileSpreadsheet },
+    { id: 'create-letter', name: 'Buat Surat Baru', icon: PlusCircle },
+    { id: 'history', name: 'Riwayat Surat', icon: History },
+  ] as const;
 
   return (
-    <aside 
-      className={`bg-slate-900 text-slate-100 flex flex-col transition-all duration-300 border-r border-slate-800 relative z-30 no-print ${
-        collapsed ? 'w-16' : 'w-64'
-      }`}
-    >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center px-4 border-b border-slate-800 gap-3 overflow-hidden">
-        <div className="p-2 bg-indigo-600 rounded-lg text-white flex-shrink-0 flex items-center justify-center">
-          <School size={20} className="animate-pulse" />
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col h-screen fixed left-0 top-0 no-print z-30">
+      {/* Brand Logo Header */}
+      <div className="p-6 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
+        <div className="bg-blue-600 p-2 rounded-lg text-white">
+          <FileSpreadsheet className="w-5 h-5" />
         </div>
-        {!collapsed && (
-          <span className="font-extrabold text-sm tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400 whitespace-nowrap">
-            PERSURATAN
-          </span>
-        )}
+        <div>
+          <h2 className="text-sm font-extrabold text-white leading-none tracking-tight">Smart School</h2>
+          <span className="text-[10px] text-slate-500 font-semibold tracking-wide uppercase mt-0.5 block">Letter Gen v1</span>
+        </div>
       </div>
 
-      {/* Navigation List */}
-      <nav className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
-        {menuItems.map((item) => {
+      {/* Nav Menu */}
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {menuItems.map(item => {
           const Icon = item.icon;
-          const isActive = currentTab === item.id;
+          const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => setCurrentTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
-                isActive 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' 
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                isActive
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10'
+                  : 'hover:bg-slate-800 hover:text-slate-100'
               }`}
-              title={collapsed ? item.label : undefined}
             >
-              <Icon size={18} className={`flex-shrink-0 ${isActive ? 'scale-110' : 'group-hover:scale-110 transition-transform'}`} />
-              {!collapsed && <span>{item.label}</span>}
-              
-              {/* Tooltip for collapsed state */}
-              {collapsed && (
-                <div className="absolute left-16 bg-slate-950 text-white text-xs font-semibold px-2.5 py-1.5 rounded-md opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 border border-slate-800 shadow-xl">
-                  {item.label}
-                </div>
-              )}
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-100'}`} />
+              <span>{item.name}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Footer / Toggle Button */}
-      <div className="p-3 border-t border-slate-800 flex justify-end">
+      {/* User Session card & Logout */}
+      <div className="p-4 border-t border-slate-800 bg-slate-950/30">
+        {/* User Badge */}
+        <div className="flex items-center gap-3 p-3 bg-slate-800/40 border border-slate-800 rounded-xl mb-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+            {user.role === 'admin' ? (
+              <Shield className="w-4 h-4" />
+            ) : (
+              <UserIcon className="w-4 h-4" />
+            )}
+          </div>
+          <div className="overflow-hidden">
+            <h4 className="text-[11px] font-bold text-slate-200 truncate leading-tight">{user.fullName}</h4>
+            <span className="text-[9px] text-slate-500 capitalize tracking-wide font-semibold block">{user.role}</span>
+          </div>
+        </div>
+
+        {/* Logout button */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+          onClick={onLogout}
+          className="w-full flex items-center justify-center gap-2 py-2.5 hover:bg-rose-950/30 text-rose-400 hover:text-rose-300 font-bold border border-transparent hover:border-rose-900/30 rounded-xl text-xs transition-all cursor-pointer"
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Keluar Aplikasi</span>
         </button>
       </div>
     </aside>
