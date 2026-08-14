@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Login } from './pages/Login';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
 import type { ActiveTab } from './components/Sidebar';
-import { Dashboard } from './pages/Dashboard';
-import { MasterData } from './pages/MasterData';
-import { CreateLetter } from './pages/CreateLetter';
-import { HistoryPage } from './pages/History';
 import { logoutFirebase, subscribeToAuthChanges } from './services/auth';
 import type { User } from './services/auth';
 import type { GeneratedLetter } from './services/storage';
+import { getSchoolProfile, getLetterHistory, clearStorageCache } from './services/storage';
 import { Menu, X, FileText, Loader2 } from 'lucide-react';
+
+// Lazy load pages for code splitting (reduces initial bundle size and speeds up first load)
+const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const MasterData = lazy(() => import('./pages/MasterData').then(m => ({ default: m.MasterData })));
+const CreateLetter = lazy(() => import('./pages/CreateLetter').then(m => ({ default: m.CreateLetter })));
+const HistoryPage = lazy(() => import('./pages/History').then(m => ({ default: m.HistoryPage })));
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,6 +27,15 @@ function App() {
     const unsubscribe = subscribeToAuthChanges((currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
+      
+      if (currentUser) {
+        // Pre-fetch/warm up cache in the background as soon as logged in
+        getSchoolProfile().catch(() => {});
+        getLetterHistory().catch(() => {});
+      } else {
+        // Clean cache on logout to avoid memory leak or session cross-talk
+        clearStorageCache();
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -72,7 +84,18 @@ function App() {
   }
 
   if (!user) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 text-white">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            <p className="text-sm font-semibold text-slate-400">Memuat Halaman Masuk...</p>
+          </div>
+        </div>
+      }>
+        <Login onLoginSuccess={handleLoginSuccess} />
+      </Suspense>
+    );
   }
 
   return (
@@ -146,32 +169,41 @@ function App() {
 
         {/* Dynamic Page Container */}
         <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-          {activeTab === 'dashboard' && (
-            <Dashboard 
-              user={user} 
-              onNavigateToTab={handleNavigateToTab} 
-            />
-          )}
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                <p className="text-xs text-slate-500 font-semibold animate-pulse">Memuat Halaman...</p>
+              </div>
+            </div>
+          }>
+            {activeTab === 'dashboard' && (
+              <Dashboard 
+                user={user} 
+                onNavigateToTab={handleNavigateToTab} 
+              />
+            )}
 
-          {activeTab === 'master-data' && (
-            <MasterData />
-          )}
+            {activeTab === 'master-data' && (
+              <MasterData />
+            )}
 
-          {activeTab === 'create-letter' && (
-            <CreateLetter 
-              editLetterData={editLetterData} 
-              onClearEdit={() => setEditLetterData(null)}
-              initialTemplateId={selectedTemplateId}
-              onClearInitialTemplate={() => setSelectedTemplateId(null)}
-              onNavigateToHistory={() => setActiveTab('history')} 
-            />
-          )}
+            {activeTab === 'create-letter' && (
+              <CreateLetter 
+                editLetterData={editLetterData} 
+                onClearEdit={() => setEditLetterData(null)}
+                initialTemplateId={selectedTemplateId}
+                onClearInitialTemplate={() => setSelectedTemplateId(null)}
+                onNavigateToHistory={() => setActiveTab('history')} 
+              />
+            )}
 
-          {activeTab === 'history' && (
-            <HistoryPage 
-              onEditLetter={handleEditLetter} 
-            />
-          )}
+            {activeTab === 'history' && (
+              <HistoryPage 
+                onEditLetter={handleEditLetter} 
+              />
+            )}
+          </Suspense>
         </main>
       </div>
     </div>

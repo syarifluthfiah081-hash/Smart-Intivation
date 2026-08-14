@@ -43,12 +43,11 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
     <div className="w-full bg-white select-none">
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 no-print text-[10px] text-slate-400">
         <span>Pratinjau Kop Surat Resmi (A4)</span>
-        <span>NPSN: {data.npsn}</span>
       </div>
 
       <div className="flex items-center gap-4 text-black font-serif">
         {/* Logo Section */}
-        <div className="w-[80px] h-[80px] flex-shrink-0 flex items-center justify-center border border-dashed border-slate-300 rounded bg-slate-50 overflow-hidden print:border-none print:bg-transparent">
+        <div className="w-[80px] h-[80px] flex-shrink-0 flex items-center justify-center border border-dashed border-slate-300 rounded bg-white overflow-hidden print:border-none print:bg-transparent">
           {data.logoUrl ? (
             <img 
               src={data.logoUrl} 
@@ -81,9 +80,11 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
           <p className="text-[9px] md:text-[10px] leading-tight font-sans mt-1">
             {data.address} {data.postalCode && `Kodepos ${data.postalCode}`}
           </p>
-          <p className="text-[8.5px] md:text-[9.5px] leading-tight font-sans">
-            Telp: {data.phone} {data.email && ` | Email: ${data.email}`} {data.website && ` | Website: ${data.website}`}
-          </p>
+          {data.email && (
+            <p className="text-[8.5px] md:text-[9.5px] leading-tight font-sans">
+              Email: {data.email}
+            </p>
+          )}
         </div>
       </div>
 

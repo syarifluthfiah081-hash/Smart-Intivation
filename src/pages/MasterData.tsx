@@ -54,6 +54,12 @@ export const MasterData: React.FC = () => {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Format file tidak didukung! Pilih berkas gambar dengan format PNG, JPG, atau JPEG.');
+        return;
+      }
+
       if (file.size > 1024 * 1024) {
         alert('File logo terlalu besar! Maksimal ukuran logo adalah 1MB.');
         return;
@@ -61,12 +67,41 @@ export const MasterData: React.FC = () => {
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setLogoPreview(base64String);
-        setProfile(prev => ({
-          ...prev,
-          logoUrl: base64String,
-        }));
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 200; // Resizing to max 200px for optimal storage and Kop layout
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > maxDim) {
+              height *= maxDim / width;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width *= maxDim / height;
+              height = maxDim;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Save transparent PNG if original was PNG, otherwise JPEG
+            const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+            const compressedBase64 = canvas.toDataURL(mimeType, 0.85);
+            setLogoPreview(compressedBase64);
+            setProfile(prev => ({
+              ...prev,
+              logoUrl: compressedBase64,
+            }));
+          }
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -289,7 +324,7 @@ export const MasterData: React.FC = () => {
             <div className="pt-2 border-t border-slate-100">
               <label className="block text-xs font-bold text-slate-600 mb-2">Logo Resmi Sekolah</label>
               <div className="flex flex-col md:flex-row items-center gap-4">
-                <div className="w-20 h-20 rounded-xl border border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden relative shadow-inner">
+                <div className="w-20 h-20 rounded-xl border border-slate-200 flex items-center justify-center bg-white overflow-hidden relative shadow-inner">
                   {logoPreview ? (
                     <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
                   ) : (
@@ -302,7 +337,7 @@ export const MasterData: React.FC = () => {
                     <span>Pilih Berkas Logo</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept=".png, .jpg, .jpeg"
                       onChange={handleLogoUpload}
                       className="hidden"
                     />

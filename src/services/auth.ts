@@ -95,6 +95,17 @@ export const logoutFirebase = async (): Promise<void> => {
 export const subscribeToAuthChanges = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
+      // 1. Panggil callback secepatnya dengan info dasar dari Firebase Auth
+      // Agar aplikasi tidak menggantung (stuck loading) saat menunggu koneksi Firestore
+      const basicUser: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        fullName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Pengguna',
+        role: 'guru', // default role sementara
+      };
+      callback(basicUser);
+
+      // 2. Tarik detail tambahan (fullName & role asli) dari Firestore di latar belakang
       try {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
@@ -102,25 +113,12 @@ export const subscribeToAuthChanges = (callback: (user: User | null) => void) =>
           callback({
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
-            fullName: userData.fullName || '',
+            fullName: userData.fullName || basicUser.fullName,
             role: userData.role || 'guru',
-          });
-        } else {
-          callback({
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            fullName: firebaseUser.displayName || 'Pengguna Baru',
-            role: 'guru',
           });
         }
       } catch (err) {
-        console.error('Gagal mengambil profil user dari Firestore:', err);
-        callback({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          fullName: firebaseUser.displayName || 'Pengguna',
-          role: 'guru',
-        });
+        console.error('Gagal mengambil profil user dari Firestore (menggunakan info dasar):', err);
       }
     } else {
       callback(null);

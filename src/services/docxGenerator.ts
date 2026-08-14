@@ -44,7 +44,7 @@ export const exportToDocx = async (
             new Paragraph({
               alignment: AlignmentType.CENTER,
               children: [
-                new TextRun({ text: `${profile.address} | Telp: ${profile.phone} | Email: ${profile.email}`, size: 18, font: 'Times New Roman' }),
+                new TextRun({ text: `${profile.address}${profile.email ? ` | Email: ${profile.email}` : ''}`, size: 18, font: 'Times New Roman' }),
               ],
             }),
             new Paragraph({ text: '' }), // Spacer
