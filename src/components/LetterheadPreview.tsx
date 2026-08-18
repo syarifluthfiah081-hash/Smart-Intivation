@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { School } from 'lucide-react';
+import { removeBlackBackground } from '../utils/imageProcess';
 
 export interface SchoolProfile {
   schoolName: string;
@@ -38,6 +39,17 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
   };
 
   const data = { ...defaultProfile, ...profile };
+  const [processedLogoUrl, setProcessedLogoUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (data.logoUrl) {
+      removeBlackBackground(data.logoUrl).then(cleanedUrl => {
+        setProcessedLogoUrl(cleanedUrl);
+      });
+    } else {
+      setProcessedLogoUrl('');
+    }
+  }, [data.logoUrl]);
 
   return (
     <div className="w-full bg-white select-none">
@@ -48,9 +60,9 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
       <div className="flex items-center gap-4 text-black font-serif">
         {/* Logo Section */}
         <div className="w-[80px] h-[80px] flex-shrink-0 flex items-center justify-center border border-dashed border-slate-300 rounded bg-white overflow-hidden print:border-none print:bg-transparent">
-          {data.logoUrl ? (
+          {processedLogoUrl || data.logoUrl ? (
             <img 
-              src={data.logoUrl} 
+              src={processedLogoUrl || data.logoUrl} 
               alt="Logo Sekolah" 
               className="w-full h-full object-contain"
             />

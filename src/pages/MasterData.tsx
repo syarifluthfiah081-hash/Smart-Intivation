@@ -91,9 +91,67 @@ export const MasterData: React.FC = () => {
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
-            // Save transparent PNG if original was PNG, otherwise JPEG
-            const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-            const compressedBase64 = canvas.toDataURL(mimeType, 0.85);
+            
+            // Clean solid black or near-black background on upload
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const dataArr = imgData.data;
+            const isNearBlack = (r: number, g: number, b: number, a: number): boolean => {
+              if (a < 10) return false;
+              return r < 50 && g < 50 && b < 50;
+            };
+            
+            const visited = new Uint8Array(width * height);
+            const queue: [number, number][] = [];
+            const pushPixel = (x: number, y: number) => {
+              const idx = y * width + x;
+              if (!visited[idx]) {
+                const pixelIdx = idx * 4;
+                if (isNearBlack(dataArr[pixelIdx], dataArr[pixelIdx + 1], dataArr[pixelIdx + 2], dataArr[pixelIdx + 3])) {
+                  visited[idx] = 1;
+                  queue.push([x, y]);
+                }
+              }
+            };
+            
+            // Seed BFS queue with border pixels
+            for (let x = 0; x < width; x++) {
+              pushPixel(x, 0);
+              pushPixel(x, height - 1);
+            }
+            for (let y = 0; y < height; y++) {
+              pushPixel(0, y);
+              pushPixel(width - 1, y);
+            }
+            
+            let head = 0;
+            while (head < queue.length) {
+              const [cx, cy] = queue[head++];
+              const idx = (cy * width + cx) * 4;
+              dataArr[idx + 3] = 0; // Set alpha to transparent
+              
+              const neighbors = [
+                [cx + 1, cy],
+                [cx - 1, cy],
+                [cx, cy + 1],
+                [cx, cy - 1]
+              ];
+              for (const [nx, ny] of neighbors) {
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                  const nidx = ny * width + nx;
+                  if (!visited[nidx]) {
+                    const pixelIdx = nidx * 4;
+                    if (isNearBlack(dataArr[pixelIdx], dataArr[pixelIdx + 1], dataArr[pixelIdx + 2], dataArr[pixelIdx + 3])) {
+                      visited[nidx] = 1;
+                      queue.push([nx, ny]);
+                    }
+                  }
+                }
+              }
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            // Always save as transparent PNG to preserve transparency
+            const compressedBase64 = canvas.toDataURL('image/png');
             setLogoPreview(compressedBase64);
             setProfile(prev => ({
               ...prev,
