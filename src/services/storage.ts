@@ -117,7 +117,18 @@ export const getSchoolProfile = async (bypassCache = false): Promise<SchoolProfi
 export const saveSchoolProfile = async (profile: SchoolProfile): Promise<void> => {
   try {
     const docRef = doc(db, 'settings', 'school_profile');
-    await setDoc(docRef, profile);
+    
+    // Gunakan timeout agar jika offline, promise tidak menggantung selamanya.
+    // Karena Firestore memiliki localCache, data tetap tersimpan di lokal dan akan disinkronkan nanti.
+    const savePromise = setDoc(docRef, profile);
+    const timeoutPromise = new Promise<void>((resolve) =>
+      setTimeout(() => {
+        console.warn('Penyimpanan ke Firestore server tertunda (mungkin offline), data disimpan di cache lokal.');
+        resolve();
+      }, 3000)
+    );
+
+    await Promise.race([savePromise, timeoutPromise]);
     cachedProfile = profile; // Update cache instan
   } catch (error) {
     console.error('Gagal menyimpan profil sekolah ke Firestore:', error);

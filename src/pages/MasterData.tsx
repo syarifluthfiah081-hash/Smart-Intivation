@@ -76,12 +76,12 @@ export const MasterData: React.FC = () => {
           
           if (width > height) {
             if (width > maxDim) {
-              height *= maxDim / width;
+              height = Math.round(height * maxDim / width);
               width = maxDim;
             }
           } else {
             if (height > maxDim) {
-              width *= maxDim / height;
+              width = Math.round(width * maxDim / height);
               height = maxDim;
             }
           }
