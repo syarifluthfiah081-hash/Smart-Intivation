@@ -52,6 +52,27 @@ export const clearStorageCache = (): void => {
   historyPromise = null;
 };
 
+// Helper functions for localStorage persistence
+const getLocalProfile = (): SchoolProfile | null => {
+  try {
+    const stored = localStorage.getItem('school_profile');
+    if (stored) {
+      return JSON.parse(stored) as SchoolProfile;
+    }
+  } catch (e) {
+    console.warn('Gagal membaca school_profile dari localStorage:', e);
+  }
+  return null;
+};
+
+const saveLocalProfile = (profile: SchoolProfile): void => {
+  try {
+    localStorage.setItem('school_profile', JSON.stringify(profile));
+  } catch (e) {
+    console.warn('Gagal menyimpan school_profile ke localStorage:', e);
+  }
+};
+
 // Fetch raw profile data directly from Firestore
 const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
   const timeoutPromise = new Promise<never>((_, reject) =>
@@ -62,23 +83,33 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
     const docRef = doc(db, 'settings', 'school_profile');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return docSnap.data() as SchoolProfile;
+      const data = docSnap.data() as SchoolProfile;
+      saveLocalProfile(data); // Sync to localStorage
+      return data;
     } else {
-      await setDoc(docRef, DEFAULT_PROFILE);
-      return DEFAULT_PROFILE;
+      const localData = getLocalProfile();
+      const profileToSave = localData || DEFAULT_PROFILE;
+      await setDoc(docRef, profileToSave);
+      saveLocalProfile(profileToSave);
+      return profileToSave;
     }
   })();
 
   try {
     return await Promise.race([fetchPromise, timeoutPromise]) as SchoolProfile;
   } catch (error) {
-    console.warn('Gagal mengambil profil sekolah dari Firestore dalam 3 detik, menggunakan data default lokal:', error);
-    return DEFAULT_PROFILE;
+    console.warn('Gagal mengambil profil sekolah dari Firestore, menggunakan data local storage atau default:', error);
+    return getLocalProfile() || DEFAULT_PROFILE;
   }
 };
 
 // Mengambil profil sekolah dari Firestore (dengan proteksi timeout 3 detik, in-memory cache, dan deduplikasi)
 export const getSchoolProfile = async (bypassCache = false): Promise<SchoolProfile> => {
+  // Jika cache memori kosong, coba inisialisasi dari localStorage agar instan
+  if (!cachedProfile) {
+    cachedProfile = getLocalProfile();
+  }
+
   // 1. Jika ada cache, return instan tapi revalidate di background jika tidak sedang fetching
   if (cachedProfile && !bypassCache) {
     if (!profilePromise) {
@@ -116,6 +147,10 @@ export const getSchoolProfile = async (bypassCache = false): Promise<SchoolProfi
 // Menyimpan profil sekolah ke Firestore
 export const saveSchoolProfile = async (profile: SchoolProfile): Promise<void> => {
   try {
+    // Selalu simpan ke localStorage terlebih dahulu agar instan dan persisten secara lokal
+    saveLocalProfile(profile);
+    cachedProfile = profile; // Update cache instan
+
     const docRef = doc(db, 'settings', 'school_profile');
     
     // Gunakan timeout agar jika offline, promise tidak menggantung selamanya.
@@ -129,7 +164,6 @@ export const saveSchoolProfile = async (profile: SchoolProfile): Promise<void> =
     );
 
     await Promise.race([savePromise, timeoutPromise]);
-    cachedProfile = profile; // Update cache instan
   } catch (error) {
     console.error('Gagal menyimpan profil sekolah ke Firestore:', error);
     throw error;
