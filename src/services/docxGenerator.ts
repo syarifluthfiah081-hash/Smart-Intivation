@@ -13,6 +13,7 @@ import {
 } from 'docx';
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { formatDateIndo } from '../templates/letterTemplates';
+import { removeBlackBackground } from '../utils/imageProcess';
 
 // Standar borderless untuk tabel metadata, list, dan tanda tangan agar TIDAK ada kotak-kotak di MS Word
 const BORDERLESS_TABLE = {
@@ -231,12 +232,31 @@ export const exportToDocx = async (
   filename: string,
   customBodyHtml?: string
 ): Promise<void> => {
-  // 1. Dual Logos (Ukuran kompak & proporsional: 48 x 48 pt)
+  // 1. Dual Logos dengan Pembersihan Background Hitam Otomatis (Transparent PNG)
   let leftLogoRun: Paragraph[] = [];
   let rightLogoRun: Paragraph[] = [];
 
-  if (profile.logoUrl) {
-    const leftBytes = base64ToUint8Array(profile.logoUrl);
+  let cleanLeftLogo = profile.logoUrl || '';
+  let cleanRightLogo = profile.logoKananUrl || '';
+
+  if (cleanLeftLogo) {
+    try {
+      cleanLeftLogo = await removeBlackBackground(cleanLeftLogo);
+    } catch (e) {
+      console.warn('Gagal membersihkan background logo kiri untuk DOCX:', e);
+    }
+  }
+
+  if (cleanRightLogo) {
+    try {
+      cleanRightLogo = await removeBlackBackground(cleanRightLogo);
+    } catch (e) {
+      console.warn('Gagal membersihkan background logo kanan untuk DOCX:', e);
+    }
+  }
+
+  if (cleanLeftLogo) {
+    const leftBytes = base64ToUint8Array(cleanLeftLogo);
     if (leftBytes) {
       leftLogoRun = [
         new Paragraph({
@@ -244,7 +264,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: leftBytes,
-              transformation: { width: 48, height: 48 },
+              transformation: { width: 52, height: 52 },
             } as any),
           ],
         }),
@@ -252,8 +272,8 @@ export const exportToDocx = async (
     }
   }
 
-  if (profile.logoKananUrl) {
-    const rightBytes = base64ToUint8Array(profile.logoKananUrl);
+  if (cleanRightLogo) {
+    const rightBytes = base64ToUint8Array(cleanRightLogo);
     if (rightBytes) {
       rightLogoRun = [
         new Paragraph({
@@ -261,7 +281,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: rightBytes,
-              transformation: { width: 48, height: 48 },
+              transformation: { width: 52, height: 52 },
             } as any),
           ],
         }),

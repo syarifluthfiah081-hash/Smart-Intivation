@@ -70,7 +70,7 @@ export const exportToPdf = async (
           }
         });
 
-        // Suntikkan CSS resmi murni bebas oklch dengan ukuran logo proporsional
+        // Suntikkan CSS resmi murni bebas oklch dengan ukuran logo 72px presisi sesuai aplikasi
         const cleanStyle = clonedDoc.createElement('style');
         cleanStyle.innerHTML = `
           * {
@@ -104,31 +104,31 @@ export const exportToPdf = async (
             min-height: 330mm !important;
           }
 
-          /* Logo KOP Surat Presisi Proporsional (Maksimal 60px) */
+          /* Logo KOP Surat Presisi Sesuai Tampilan Aplikasi (72px) */
           img {
-            max-width: 60px !important;
-            max-height: 60px !important;
-            width: 60px !important;
-            height: 60px !important;
+            max-width: 72px !important;
+            max-height: 72px !important;
+            width: 72px !important;
+            height: 72px !important;
             object-fit: contain !important;
             display: block !important;
             margin: 0 auto !important;
           }
-          .w-\\[60px\\], .w-\\[72px\\] {
-            width: 60px !important;
-            height: 60px !important;
-            min-width: 60px !important;
-            max-width: 60px !important;
-            max-height: 60px !important;
+          .w-\\[72px\\] {
+            width: 72px !important;
+            height: 72px !important;
+            min-width: 72px !important;
+            max-width: 72px !important;
+            max-height: 72px !important;
           }
 
-          /* Garis Ganda KOP Surat Bersih & Proporsional */
+          /* Garis Ganda KOP Surat Bersih & Proporsional Sesuai Standar Resmi */
           .kop-line {
-            border-top: 2px solid #000000 !important;
-            border-bottom: 0.8px solid #000000 !important;
+            border-top: 2.5px solid #000000 !important;
+            border-bottom: 1px solid #000000 !important;
             height: 2px !important;
             margin-top: 4px !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 14px !important;
           }
 
           .no-print {
@@ -146,7 +146,7 @@ export const exportToPdf = async (
           }
           td, th {
             color: #000000 !important;
-            padding: 2px 0 !important;
+            padding: 2.5px 0 !important;
             font-size: 12px !important;
             font-family: "Times New Roman", Times, serif !important;
           }
@@ -182,8 +182,8 @@ export const exportToPdf = async (
           .mb-8 { margin-bottom: 2rem !important; }
           .ml-6 { margin-left: 1.5rem !important; }
           .w-full { width: 100% !important; }
-          .w-40, .w-36 { width: 150px !important; }
-          .w-20 { width: 80px !important; }
+          .w-40, .w-36 { width: 160px !important; }
+          .w-20 { width: 90px !important; }
         `;
         clonedDoc.head.appendChild(cleanStyle);
 
