@@ -37,9 +37,15 @@ export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
 
 interface LetterheadPreviewProps {
   profile?: Partial<SchoolProfile>;
+  onEditKopClick?: () => void;
+  showEditBadge?: boolean;
 }
 
-export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile }) => {
+export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ 
+  profile, 
+  onEditKopClick,
+  showEditBadge = false 
+}) => {
   const data: SchoolProfile = {
     ...DEFAULT_SCHOOL_PROFILE,
     ...profile,
@@ -47,33 +53,49 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
     logoKananUrl: profile?.logoKananUrl !== undefined && profile?.logoKananUrl !== '' ? profile.logoKananUrl : LOGO_KANAN_DEFAULT,
   };
 
-  const [processedLogoKiri, setProcessedLogoKiri] = useState<string>('');
-  const [processedLogoKanan, setProcessedLogoKanan] = useState<string>('');
+  const [processedLogoKiri, setProcessedLogoKiri] = useState<string>(data.logoUrl || LOGO_KIRI_DEFAULT);
+  const [processedLogoKanan, setProcessedLogoKanan] = useState<string>(data.logoKananUrl || LOGO_KANAN_DEFAULT);
 
   useEffect(() => {
     if (data.logoUrl) {
       removeBlackBackground(data.logoUrl).then(cleanedUrl => {
-        setProcessedLogoKiri(cleanedUrl);
+        setProcessedLogoKiri(cleanedUrl || data.logoUrl || LOGO_KIRI_DEFAULT);
+      }).catch(() => {
+        setProcessedLogoKiri(data.logoUrl || LOGO_KIRI_DEFAULT);
       });
     } else {
-      setProcessedLogoKiri('');
+      setProcessedLogoKiri(LOGO_KIRI_DEFAULT);
     }
   }, [data.logoUrl]);
 
   useEffect(() => {
     if (data.logoKananUrl) {
       removeBlackBackground(data.logoKananUrl).then(cleanedUrl => {
-        setProcessedLogoKanan(cleanedUrl);
+        setProcessedLogoKanan(cleanedUrl || data.logoKananUrl || LOGO_KANAN_DEFAULT);
+      }).catch(() => {
+        setProcessedLogoKanan(data.logoKananUrl || LOGO_KANAN_DEFAULT);
       });
     } else {
-      setProcessedLogoKanan('');
+      setProcessedLogoKanan(LOGO_KANAN_DEFAULT);
     }
   }, [data.logoKananUrl]);
 
   return (
-    <div className="w-full bg-white select-none">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 no-print text-[10px] text-slate-400">
-        <span className="font-semibold text-slate-500">Kop Surat Resmi SMKN 2 Kota Tidore Kepulauan</span>
+    <div className="w-full bg-white select-none relative group">
+      {/* Optional Top Bar with Quick Edit KOP Surat */}
+      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2 no-print text-[10px] text-slate-400">
+        <span className="font-semibold text-slate-500 flex items-center gap-1.5">
+          <span>Kop Surat Resmi SMKN 2 Kota Tidore Kepulauan</span>
+        </span>
+        {showEditBadge && onEditKopClick && (
+          <button
+            type="button"
+            onClick={onEditKopClick}
+            className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-lg border border-blue-200 transition-all cursor-pointer flex items-center gap-1"
+          >
+            ✏️ Edit KOP Surat
+          </button>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-2 text-black font-serif">
@@ -84,6 +106,7 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
               src={processedLogoKiri || data.logoUrl} 
               alt="Logo Pemda (Kiri)" 
               className="w-full h-full object-contain"
+              loading="eager"
             />
           ) : (
             <div className="flex flex-col items-center text-slate-400 print:text-black">
@@ -106,13 +129,18 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
             </div>
           )}
           <h3 className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black">
-            {data.schoolName}
+            {data.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}
           </h3>
           <p className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif">
             <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
             {data.email && (
               <span className="ml-2 font-serif">
                 <em>E-Maile:</em>{data.email}
+              </span>
+            )}
+            {data.phone && (
+              <span className="ml-2 font-serif">
+                <em>Telp:</em>{data.phone}
               </span>
             )}
           </p>
@@ -125,6 +153,7 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
               src={processedLogoKanan || data.logoKananUrl} 
               alt="Logo SMKN 2 Tikep (Kanan)" 
               className="w-full h-full object-contain"
+              loading="eager"
             />
           ) : (
             <div className="flex flex-col items-center text-slate-400 print:text-black">
@@ -135,7 +164,7 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
         </div>
       </div>
 
-      {/* Double Border Line Formal Kop Surat Sesuai Foto Resmi */}
+      {/* Double Border Line Formal Kop Surat Sesuai Format Resmi */}
       <div className="kop-line"></div>
     </div>
   );

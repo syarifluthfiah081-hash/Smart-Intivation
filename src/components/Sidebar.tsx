@@ -1,6 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, FileSpreadsheet, PlusCircle, History, LogOut, User as UserIcon, Shield } from 'lucide-react';
 import type { User } from '../services/auth';
+import { AppLogo } from './AppLogo';
 
 export type ActiveTab = 'dashboard' | 'master-data' | 'create-letter' | 'history';
 
@@ -24,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
       {/* Brand Logo Header */}
       <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
         <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 p-1 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner">
-          <img src="/logo-app.svg" alt="Smart School Letter" className="w-full h-full object-contain" />
+          <AppLogo className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-xs font-extrabold text-white leading-tight truncate">Smart School Letter</h2>

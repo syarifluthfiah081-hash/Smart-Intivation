@@ -4,6 +4,7 @@ import { Mail, Lock, User as UserIcon, Shield, GraduationCap, Loader2 } from 'lu
 
 import { loginFirebase, registerFirebase } from '../services/auth';
 import type { User } from '../services/auth';
+import { AppLogo } from '../components/AppLogo';
 
 interface LoginProps {
   onLoginSuccess: (user: User) => void;
@@ -82,7 +83,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
             <div className="w-16 h-16 rounded-2xl bg-slate-900/60 p-1.5 border border-blue-500/40 shadow-xl shadow-blue-600/20 flex items-center justify-center">
-              <img src="/logo-app.svg" alt="Smart School Letter Logo" className="w-full h-full object-contain" />
+              <AppLogo className="w-full h-full object-contain" />
             </div>
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">Smart School Letter</h1>

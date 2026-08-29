@@ -11,7 +11,6 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { SchoolProfile } from '../components/LetterheadPreview';
-
 import { DEFAULT_SCHOOL_PROFILE } from '../components/LetterheadPreview';
 
 export interface GeneratedLetter {
@@ -27,7 +26,6 @@ export interface GeneratedLetter {
 
 const DEFAULT_PROFILE: SchoolProfile = DEFAULT_SCHOOL_PROFILE;
 
-
 // In-memory cache variables
 let cachedProfile: SchoolProfile | null = null;
 let cachedHistory: GeneratedLetter[] | null = null;
@@ -35,7 +33,7 @@ let cachedHistory: GeneratedLetter[] | null = null;
 let profilePromise: Promise<SchoolProfile> | null = null;
 let historyPromise: Promise<GeneratedLetter[]> | null = null;
 
-// Fungsi untuk membersihkan cache saat user logout
+// Clean cache on logout
 export const clearStorageCache = (): void => {
   cachedProfile = null;
   cachedHistory = null;
@@ -43,7 +41,8 @@ export const clearStorageCache = (): void => {
   historyPromise = null;
 };
 
-// Helper functions for localStorage persistence
+// ==================== LOCAL STORAGE HELPERS ====================
+
 const getLocalProfile = (): SchoolProfile | null => {
   try {
     const stored = localStorage.getItem('school_profile');
@@ -64,10 +63,32 @@ const saveLocalProfile = (profile: SchoolProfile): void => {
   }
 };
 
+const getLocalHistory = (): GeneratedLetter[] => {
+  try {
+    const stored = localStorage.getItem('smart_letter_history');
+    if (stored) {
+      return JSON.parse(stored) as GeneratedLetter[];
+    }
+  } catch (e) {
+    console.warn('Gagal membaca smart_letter_history dari localStorage:', e);
+  }
+  return [];
+};
+
+const saveLocalHistory = (history: GeneratedLetter[]): void => {
+  try {
+    localStorage.setItem('smart_letter_history', JSON.stringify(history));
+  } catch (e) {
+    console.warn('Gagal menyimpan smart_letter_history ke localStorage:', e);
+  }
+};
+
+// ==================== PROFILE FUNCTIONS ====================
+
 // Fetch raw profile data directly from Firestore
 const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('Firestore timeout')), 3000)
+    setTimeout(() => reject(new Error('Firestore timeout')), 2500)
   );
 
   const fetchPromise = (async () => {
@@ -91,7 +112,7 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
         logoUrl: localData?.logoUrl || DEFAULT_PROFILE.logoUrl,
         logoKananUrl: localData?.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
       };
-      await setDoc(docRef, profileToSave);
+      setDoc(docRef, profileToSave).catch(() => {});
       saveLocalProfile(profileToSave);
       return profileToSave;
     }
@@ -111,78 +132,66 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
   }
 };
 
-
-// Mengambil profil sekolah dari Firestore (dengan proteksi timeout 3 detik, in-memory cache, dan deduplikasi)
 export const getSchoolProfile = async (bypassCache = false): Promise<SchoolProfile> => {
-  // Jika cache memori kosong, coba inisialisasi dari localStorage agar instan
   if (!cachedProfile) {
     cachedProfile = getLocalProfile();
   }
 
-  // 1. Jika ada cache, return instan tapi revalidate di background jika tidak sedang fetching
   if (cachedProfile && !bypassCache) {
     if (!profilePromise) {
       profilePromise = fetchSchoolProfileRaw().then(updated => {
         cachedProfile = updated;
         profilePromise = null;
         return updated;
-      }).catch(err => {
+      }).catch(() => {
         profilePromise = null;
-        console.warn('Background update profil sekolah gagal:', err);
         return cachedProfile!;
       });
     }
     return cachedProfile;
   }
 
-  // 2. Jika sedang dalam proses fetch, pakai promise yang sama (deduplikasi)
   if (profilePromise && !bypassCache) {
     return profilePromise;
   }
 
-  // 3. Lakukan fetch baru
   profilePromise = fetchSchoolProfileRaw().then(data => {
     cachedProfile = data;
     profilePromise = null;
     return data;
-  }).catch(err => {
+  }).catch(() => {
     profilePromise = null;
-    throw err;
+    const fallback = getLocalProfile() || DEFAULT_PROFILE;
+    cachedProfile = fallback;
+    return fallback;
   });
 
   return profilePromise;
 };
 
-// Menyimpan profil sekolah ke Firestore
 export const saveSchoolProfile = async (profile: SchoolProfile): Promise<void> => {
-  try {
-    // Selalu simpan ke localStorage terlebih dahulu agar instan dan persisten secara lokal
-    saveLocalProfile(profile);
-    cachedProfile = profile; // Update cache instan
+  // Always save locally immediately
+  saveLocalProfile(profile);
+  cachedProfile = profile;
 
+  try {
     const docRef = doc(db, 'settings', 'school_profile');
-    
-    // Gunakan timeout agar jika offline, promise tidak menggantung selamanya.
-    // Karena Firestore memiliki localCache, data tetap tersimpan di lokal dan akan disinkronkan nanti.
     const savePromise = setDoc(docRef, profile);
     const timeoutPromise = new Promise<void>((resolve) =>
-      setTimeout(() => {
-        console.warn('Penyimpanan ke Firestore server tertunda (mungkin offline), data disimpan di cache lokal.');
-        resolve();
-      }, 3000)
+      setTimeout(() => resolve(), 2500)
     );
-
     await Promise.race([savePromise, timeoutPromise]);
   } catch (error) {
-    console.error('Gagal menyimpan profil sekolah ke Firestore:', error);
-    throw error;
+    console.warn('Penyimpanan ke Firestore offline/tertunda, data disimpan aman di cache lokal:', error);
   }
 };
 
-// Fetch raw letter history directly from Firestore
+// ==================== LETTER HISTORY FUNCTIONS ====================
+
+// Fetch raw letter history directly from Firestore with localStorage fallback
 const fetchLetterHistoryRaw = async (): Promise<GeneratedLetter[]> => {
   const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('Firestore timeout')), 3000)
+    setTimeout(() => reject(new Error('Firestore timeout')), 2500)
   );
 
   const fetchPromise = (async () => {
@@ -204,55 +213,65 @@ const fetchLetterHistoryRaw = async (): Promise<GeneratedLetter[]> => {
         customBodyHtml: data.customBodyHtml || '',
       });
     });
+    
+    if (history.length > 0) {
+      saveLocalHistory(history);
+    }
     return history;
   })();
 
   try {
     return await Promise.race([fetchPromise, timeoutPromise]) as GeneratedLetter[];
   } catch (error) {
-    console.warn('Gagal mengambil riwayat surat dari Firestore dalam 3 detik, menggunakan array kosong:', error);
-    return [];
+    console.warn('Gagal mengambil riwayat surat dari Firestore dalam 2.5 detik, menggunakan localStorage:', error);
+    return getLocalHistory();
   }
 };
 
-// Mengambil riwayat surat dari Firestore (dengan cache in-memory, deduplikasi, dan background update)
 export const getLetterHistory = async (bypassCache = false): Promise<GeneratedLetter[]> => {
-  // 1. Jika ada cache, return instan tapi revalidate di background jika tidak sedang fetching
-  if (cachedHistory && !bypassCache) {
+  if (!cachedHistory) {
+    cachedHistory = getLocalHistory();
+  }
+
+  if (cachedHistory && cachedHistory.length > 0 && !bypassCache) {
     if (!historyPromise) {
       historyPromise = fetchLetterHistoryRaw().then(updated => {
-        cachedHistory = updated;
+        if (updated && updated.length > 0) {
+          cachedHistory = updated;
+        }
         historyPromise = null;
-        return updated;
-      }).catch(err => {
+        return cachedHistory || updated;
+      }).catch(() => {
         historyPromise = null;
-        console.warn('Background update riwayat surat gagal:', err);
-        return cachedHistory!;
+        return cachedHistory || [];
       });
     }
     return cachedHistory;
   }
 
-  // 2. Jika sedang dalam proses fetch, pakai promise yang sama (deduplikasi)
   if (historyPromise && !bypassCache) {
     return historyPromise;
   }
 
-  // 3. Lakukan fetch baru
   historyPromise = fetchLetterHistoryRaw().then(data => {
     cachedHistory = data;
     historyPromise = null;
     return data;
-  }).catch(err => {
+  }).catch(() => {
     historyPromise = null;
-    throw err;
+    const fallback = getLocalHistory();
+    cachedHistory = fallback;
+    return fallback;
   });
 
   return historyPromise;
 };
 
-// Menyimpan ulang/update seluruh riwayat surat (untuk sinkronisasi modifikasi bulk)
 export const saveLetterHistory = async (history: GeneratedLetter[]): Promise<void> => {
+  // Always update local cache and storage immediately
+  saveLocalHistory(history);
+  cachedHistory = history;
+
   try {
     const promises = history.map((letter) => {
       const letterDoc = doc(db, 'letters', letter.id);
@@ -266,22 +285,39 @@ export const saveLetterHistory = async (history: GeneratedLetter[]): Promise<voi
         customBodyHtml: letter.customBodyHtml || '',
       });
     });
-    await Promise.all(promises);
-    cachedHistory = history; // Update cache instan
+    const timeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), 3000));
+    await Promise.race([Promise.all(promises), timeoutPromise]);
   } catch (error) {
-    console.error('Gagal menyimpan riwayat surat ke Firestore:', error);
-    throw error;
+    console.warn('Gagal sinkronisasi seluruh riwayat surat ke Firestore, data aman di lokal:', error);
   }
 };
 
-// Menambahkan surat baru ke riwayat Firestore
 export const addLetterToHistory = async (
   letter: Omit<GeneratedLetter, 'id' | 'dateCreated'>
 ): Promise<GeneratedLetter> => {
+  const dateCreated = new Date().toISOString();
+  const localId = `letter_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  
+  const newLetter: GeneratedLetter = {
+    id: localId,
+    typeId: letter.typeId,
+    typeName: letter.typeName,
+    refNumber: letter.refNumber,
+    recipientName: letter.recipientName,
+    dateCreated,
+    variables: letter.variables,
+    customBodyHtml: letter.customBodyHtml || '',
+  };
+
+  // 1. Immediately update cache and localStorage
+  const currentHistory = cachedHistory || getLocalHistory();
+  const updatedHistory = [newLetter, ...currentHistory];
+  cachedHistory = updatedHistory;
+  saveLocalHistory(updatedHistory);
+
+  // 2. Background async save to Firestore with timeout
   try {
     const lettersCol = collection(db, 'letters');
-    const dateCreated = new Date().toISOString();
-    
     const docData = {
       typeId: letter.typeId,
       typeName: letter.typeName,
@@ -292,37 +328,36 @@ export const addLetterToHistory = async (
       customBodyHtml: letter.customBodyHtml || '',
     };
     
-    const docRef = await addDoc(lettersCol, docData);
-    const newLetter: GeneratedLetter = {
-      id: docRef.id,
-      ...docData,
-    };
-
-
-    // Update cache dengan menyematkan surat baru di paling depan (descending)
-    if (cachedHistory) {
-      cachedHistory = [newLetter, ...cachedHistory];
+    const savePromise = addDoc(lettersCol, docData);
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500));
+    
+    const res = await Promise.race([savePromise, timeoutPromise]);
+    if (res && 'id' in res) {
+      newLetter.id = res.id;
+      // Update with server id in memory
+      saveLocalHistory(cachedHistory);
     }
-
-    return newLetter;
   } catch (error) {
-    console.error('Gagal menambahkan surat ke Firestore:', error);
-    throw error;
+    console.warn('Gagal menambahkan surat ke Firestore server, riwayat tersimpan lokal secara aman:', error);
   }
+
+  return newLetter;
 };
 
-// Menghapus surat dari riwayat Firestore
 export const deleteLetterFromHistory = async (id: string): Promise<void> => {
+  // 1. Update local cache and storage immediately
+  const currentHistory = cachedHistory || getLocalHistory();
+  const updatedHistory = currentHistory.filter(letter => letter.id !== id);
+  cachedHistory = updatedHistory;
+  saveLocalHistory(updatedHistory);
+
+  // 2. Delete from Firestore in background
   try {
     const docRef = doc(db, 'letters', id);
-    await deleteDoc(docRef);
-    
-    // Update cache dengan menghapus item tersebut
-    if (cachedHistory) {
-      cachedHistory = cachedHistory.filter(letter => letter.id !== id);
-    }
+    const deletePromise = deleteDoc(docRef);
+    const timeoutPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), 2500));
+    await Promise.race([deletePromise, timeoutPromise]);
   } catch (error) {
-    console.error('Gagal menghapus surat dari Firestore:', error);
-    throw error;
+    console.warn('Gagal menghapus surat dari Firestore server, surat telah dihapus secara lokal:', error);
   }
 };
