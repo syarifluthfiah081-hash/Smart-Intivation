@@ -718,12 +718,12 @@ ${vars.isi_pernyataan || '-'}
     `
   },
 
-  // 12. SURAT PENERIMAAN SISWA PINDAHAN
+  // 12. SURAT KETERANGAN KESEDIAAN MENERIMA
   {
     id: 'penerimaan-pindahan',
-    name: 'Surat Penerimaan Siswa Pindahan',
+    name: 'Surat Keterangan Kesediaan Menerima',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '422.2/076/SMKN2-TIKEP/2026', defaultValue: '422.2/076/SMKN2-TIKEP/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '400.3.8 / 68  / 08 / SMKN. 2 / TIKEP/ 2026', defaultValue: '400.3.8 / 68  / 08 / SMKN. 2 / TIKEP/ 2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
       { key: 'nama_siswa', label: 'Nama Lengkap Siswa', type: 'text', placeholder: 'Nabila Safitri', defaultValue: 'Nabila Safitri' },
       { key: 'nisn', label: 'NISN', type: 'text', placeholder: '0091234567', defaultValue: '0091234567' },
@@ -735,8 +735,8 @@ ${vars.isi_pernyataan || '-'}
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
         <div class="text-center mb-5">
-          <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT PENERIMAAN SISWA PINDAHAN</h4>
-          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
+          <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT  KETERANGAN KESEDIAAN MENERIMA</h4>
+          <p class="text-[11px] leading-none mt-1">Nomor : ${vars.nomor || '-'}</p>
         </div>
 
         <div class="mb-3 text-justify">
@@ -767,3 +767,4 @@ ${vars.isi_pernyataan || '-'}
     `
   }
 ];
+

@@ -107,18 +107,11 @@ export const exportToDocx = async (
             new Paragraph({
               alignment: AlignmentType.CENTER,
               children: [
-                new TextRun({ text: `${profile.address}${profile.postalCode ? ` Kode Pos ${profile.postalCode}` : ''}`, size: 17, font: 'Times New Roman' }),
+                new TextRun({ text: `${profile.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}${profile.email ? `  E-Maile:${profile.email}` : ''}`, size: 16, font: 'Times New Roman' }),
               ],
             }),
-            ...(profile.email ? [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [
-                  new TextRun({ text: `Email: ${profile.email}${profile.website ? ` | Web: ${profile.website}` : ''}`, size: 16, font: 'Times New Roman' }),
-                ],
-              })
-            ] : []),
             new Paragraph({ text: '' }),
+
           ],
         }),
 

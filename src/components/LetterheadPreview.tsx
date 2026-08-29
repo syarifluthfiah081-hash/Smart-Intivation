@@ -13,7 +13,7 @@ export interface SchoolProfile {
   phone: string;
   email: string;
   website?: string;
-  logoUrl?: string; // Logo Kiri (Hijau - Pemda / Provinsi / Daerah)
+  logoUrl?: string; // Logo Kiri (Hijau - Pemda Maluku Utara / Tidore)
   logoKananUrl?: string; // Logo Kanan (Biru - SMK Negeri 2 Kota Tidore Kepulauan)
   principalName: string;
   principalNip: string;
@@ -22,13 +22,13 @@ export interface SchoolProfile {
 export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   schoolName: 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN',
   foundationName: '',
-  deptName: 'PEMERINTAH DAERAH PROVINSI MALUKU UTARA\nDINAS PENDIDIKAN DAN KEBUDAYAAN',
+  deptName: 'PEMERINTAH PROVINSI MALUKU UTARA\nDINAS PENDIDIKAN DAN KEBUDAYAAN',
   npsn: '60201509',
-  address: 'Jl. Raya Soasio Rum Kel. Tomalou Kec. Tidore Selatan',
-  postalCode: '97811',
-  phone: '-',
-  email: 'smkn2tikep@yahoo.com',
-  website: 'www.smkn2tikep.sch.id',
+  address: 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan',
+  postalCode: '',
+  phone: '',
+  email: 'smkn2tidore@yahoo.com',
+  website: '',
   logoUrl: LOGO_KIRI_DEFAULT,
   logoKananUrl: LOGO_KANAN_DEFAULT,
   principalName: 'Ali Djumati.S.Pd.,M.Si',
@@ -73,12 +73,12 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
   return (
     <div className="w-full bg-white select-none">
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2 no-print text-[10px] text-slate-400">
-        <span className="font-semibold text-slate-500">Kop Surat Resmi SMKN 2 Tidore Kepulauan (Logo Ganda Kiri & Kanan)</span>
+        <span className="font-semibold text-slate-500">Kop Surat Resmi SMKN 2 Kota Tidore Kepulauan</span>
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-black font-serif">
-        {/* Left Logo (Hijau / Pemda) */}
-        <div className="w-[75px] h-[75px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
+      <div className="flex items-center justify-between gap-2 text-black font-serif">
+        {/* Left Logo (Hijau - Pemda / Provinsi Maluku Utara) */}
+        <div className="w-[72px] h-[72px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
           {processedLogoKiri || data.logoUrl ? (
             <img 
               src={processedLogoKiri || data.logoUrl} 
@@ -94,34 +94,32 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
         </div>
 
         {/* Center Text Section */}
-        <div className="flex-1 text-center px-1">
+        <div className="flex-1 text-center px-1 font-serif">
           {data.foundationName && (
-            <h4 className="text-[11px] uppercase font-semibold leading-tight tracking-wider">
+            <h4 className="text-[12px] uppercase font-bold leading-snug tracking-normal text-black">
               {data.foundationName}
             </h4>
           )}
           {data.deptName && (
-            <div className="text-[10px] md:text-[11px] uppercase font-bold leading-snug whitespace-pre-line tracking-wide">
+            <div className="text-[12px] md:text-[13px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black">
               {data.deptName}
             </div>
           )}
-          <h3 className="text-sm md:text-base uppercase font-extrabold leading-snug tracking-wider mt-0.5 text-black">
+          <h3 className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black">
             {data.schoolName}
           </h3>
-          <p className="text-[9px] md:text-[9.5px] leading-tight font-sans mt-0.5 font-normal">
-            {data.address} {data.postalCode && `Kode Pos ${data.postalCode}`}
+          <p className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif">
+            <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
+            {data.email && (
+              <span className="ml-2 font-serif">
+                <em>E-Maile:</em>{data.email}
+              </span>
+            )}
           </p>
-          {(data.email || data.website || data.phone !== '-') && (
-            <p className="text-[8.5px] md:text-[9px] leading-tight font-sans text-slate-700">
-              {data.phone && data.phone !== '-' && `Telp: ${data.phone} `}
-              {data.email && `Email: ${data.email}`}
-              {data.website && ` | Web: ${data.website}`}
-            </p>
-          )}
         </div>
 
-        {/* Right Logo (Biru / SMK N 2 Tidore Kepulauan) */}
-        <div className="w-[75px] h-[75px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
+        {/* Right Logo (Biru - SMKN 2 Tidore Kepulauan) */}
+        <div className="w-[72px] h-[72px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
           {processedLogoKanan || data.logoKananUrl ? (
             <img 
               src={processedLogoKanan || data.logoKananUrl} 
@@ -137,7 +135,7 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({ profile })
         </div>
       </div>
 
-      {/* Double Border Line Formal */}
+      {/* Double Border Line Formal Kop Surat Sesuai Foto Resmi */}
       <div className="kop-line"></div>
     </div>
   );
