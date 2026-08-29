@@ -101,130 +101,139 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
 
   return (
     <div className="w-full bg-white select-text relative">
-      <div className="flex items-center justify-between gap-3 text-black font-serif">
-        {/* Left Logo (Hijau - Pemda Provinsi Maluku Utara) */}
-        <div 
-          onClick={() => isEditable && fileInputKiriRef.current?.click()}
-          title={isEditable ? "Klik untuk mengganti Logo Kiri" : undefined}
-          className={`w-[82px] h-[82px] min-w-[82px] max-w-[82px] max-h-[82px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden relative group ${
-            isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-lg' : ''
-          }`}
-        >
-          {processedLogoKiri || data.logoUrl ? (
-            <img 
-              src={processedLogoKiri || data.logoUrl} 
-              alt="Logo Pemda (Kiri)" 
-              className="w-full h-full max-w-[82px] max-h-[82px] object-contain block"
-              loading="eager"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-slate-400 print:text-black">
-              <School className="w-8 h-8 stroke-[1.5]" />
-              <span className="text-[7px] font-sans no-print">Logo Kiri</span>
-            </div>
-          )}
+      {/* KOP Surat menggunakan Tabel HTML 3 Sel Presisi agar Render PDF, Word, & Cetak 100% Sempurna */}
+      <table className="w-full border-collapse border-none my-0">
+        <tbody>
+          <tr>
+            {/* Sel Logo Kiri (85px) */}
+            <td className="w-[85px] min-w-[85px] max-w-[85px] align-middle text-center p-0 border-none">
+              <div 
+                onClick={() => isEditable && fileInputKiriRef.current?.click()}
+                title={isEditable ? "Klik untuk mengganti Logo Kiri" : undefined}
+                className={`w-[82px] h-[82px] mx-auto flex items-center justify-center overflow-hidden relative group ${
+                  isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-lg' : ''
+                }`}
+              >
+                {processedLogoKiri || data.logoUrl ? (
+                  <img 
+                    src={processedLogoKiri || data.logoUrl} 
+                    alt="Logo Pemda (Kiri)" 
+                    className="w-[82px] h-[82px] max-w-[82px] max-h-[82px] object-contain block mx-auto"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-slate-400 print:text-black">
+                    <School className="w-8 h-8 stroke-[1.5]" />
+                    <span className="text-[7px] font-sans no-print">Logo Kiri</span>
+                  </div>
+                )}
 
-          {isEditable && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity no-print rounded-lg">
-              <Camera className="w-4 h-4" />
-            </div>
-          )}
-          <input 
-            ref={fileInputKiriRef}
-            type="file" 
-            accept="image/*" 
-            onChange={(e) => handleFileUpload(e, 'kiri')} 
-            className="hidden" 
-          />
-        </div>
+                {isEditable && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity no-print rounded-lg">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                )}
+                <input 
+                  ref={fileInputKiriRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => handleFileUpload(e, 'kiri')} 
+                  className="hidden" 
+                />
+              </div>
+            </td>
 
-        {/* Center Text Section (Persis Sesuai Contoh Fisik Surat) */}
-        <div className="flex-1 text-center px-1 font-serif">
-          {data.foundationName && (
-            <h4 
-              contentEditable={isEditable}
-              suppressContentEditableWarning={true}
-              onBlur={(e) => onKopChange && onKopChange('foundationName', e.currentTarget.innerText.trim())}
-              className="text-[13px] uppercase font-bold leading-tight tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1"
-            >
-              {data.foundationName}
-            </h4>
-          )}
-          
-          <div 
-            contentEditable={isEditable}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => onKopChange && onKopChange('deptName', e.currentTarget.innerText.trim())}
-            className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1"
-          >
-            {data.deptName}
-          </div>
+            {/* Sel Teks Tengah */}
+            <td className="align-middle text-center px-2 border-none font-serif">
+              {data.foundationName && (
+                <h4 
+                  contentEditable={isEditable}
+                  suppressContentEditableWarning={true}
+                  onBlur={(e) => onKopChange && onKopChange('foundationName', e.currentTarget.innerText.trim())}
+                  className="text-[13px] uppercase font-bold leading-tight tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                >
+                  {data.foundationName}
+                </h4>
+              )}
+              
+              <div 
+                contentEditable={isEditable}
+                suppressContentEditableWarning={true}
+                onBlur={(e) => onKopChange && onKopChange('deptName', e.currentTarget.innerText.trim())}
+                className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+              >
+                {data.deptName}
+              </div>
 
-          <h3 
-            contentEditable={isEditable}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => onKopChange && onKopChange('schoolName', e.currentTarget.innerText.trim())}
-            className="text-[14.5px] md:text-[15.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black outline-none focus:bg-blue-50/60 rounded px-1"
-          >
-            {data.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}
-          </h3>
+              <h3 
+                contentEditable={isEditable}
+                suppressContentEditableWarning={true}
+                onBlur={(e) => onKopChange && onKopChange('schoolName', e.currentTarget.innerText.trim())}
+                className="text-[14.5px] md:text-[15.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+              >
+                {data.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}
+              </h3>
 
-          <p 
-            contentEditable={isEditable}
-            suppressContentEditableWarning={true}
-            onBlur={(e) => onKopChange && onKopChange('address', e.currentTarget.innerText.trim())}
-            className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif outline-none focus:bg-blue-50/60 rounded px-1"
-          >
-            <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
-            {data.email && (
-              <span className="ml-2 font-serif">
-                <em>E-Maile:</em>{data.email}
-              </span>
-            )}
-            {data.phone && (
-              <span className="ml-2 font-serif">
-                <em>Telp:</em>{data.phone}
-              </span>
-            )}
-          </p>
-        </div>
+              <p 
+                contentEditable={isEditable}
+                suppressContentEditableWarning={true}
+                onBlur={(e) => onKopChange && onKopChange('address', e.currentTarget.innerText.trim())}
+                className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+              >
+                <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
+                {data.email && (
+                  <span className="ml-2 font-serif">
+                    <em>E-Maile:</em>{data.email}
+                  </span>
+                )}
+                {data.phone && (
+                  <span className="ml-2 font-serif">
+                    <em>Telp:</em>{data.phone}
+                  </span>
+                )}
+              </p>
+            </td>
 
-        {/* Right Logo (Biru - SMKN 2 Tidore Kepulauan) */}
-        <div 
-          onClick={() => isEditable && fileInputKananRef.current?.click()}
-          title={isEditable ? "Klik untuk mengganti Logo Kanan" : undefined}
-          className={`w-[82px] h-[82px] min-w-[82px] max-w-[82px] max-h-[82px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden relative group ${
-            isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-lg' : ''
-          }`}
-        >
-          {processedLogoKanan || data.logoKananUrl ? (
-            <img 
-              src={processedLogoKanan || data.logoKananUrl} 
-              alt="Logo SMKN 2 Tikep (Kanan)" 
-              className="w-full h-full max-w-[82px] max-h-[82px] object-contain block"
-              loading="eager"
-            />
-          ) : (
-            <div className="flex flex-col items-center text-slate-400 print:text-black">
-              <School className="w-8 h-8 stroke-[1.5]" />
-              <span className="text-[7px] font-sans no-print">Logo Kanan</span>
-            </div>
-          )}
+            {/* Sel Logo Kanan (85px) */}
+            <td className="w-[85px] min-w-[85px] max-w-[85px] align-middle text-center p-0 border-none">
+              <div 
+                onClick={() => isEditable && fileInputKananRef.current?.click()}
+                title={isEditable ? "Klik untuk mengganti Logo Kanan" : undefined}
+                className={`w-[82px] h-[82px] mx-auto flex items-center justify-center overflow-hidden relative group ${
+                  isEditable ? 'cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-lg' : ''
+                }`}
+              >
+                {processedLogoKanan || data.logoKananUrl ? (
+                  <img 
+                    src={processedLogoKanan || data.logoKananUrl} 
+                    alt="Logo SMKN 2 Tikep (Kanan)" 
+                    className="w-[82px] h-[82px] max-w-[82px] max-h-[82px] object-contain block mx-auto"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-slate-400 print:text-black">
+                    <School className="w-8 h-8 stroke-[1.5]" />
+                    <span className="text-[7px] font-sans no-print">Logo Kanan</span>
+                  </div>
+                )}
 
-          {isEditable && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity no-print rounded-lg">
-              <Camera className="w-4 h-4" />
-            </div>
-          )}
-          <input 
-            ref={fileInputKananRef}
-            type="file" 
-            accept="image/*" 
-            onChange={(e) => handleFileUpload(e, 'kanan')} 
-            className="hidden" 
-          />
-        </div>
-      </div>
+                {isEditable && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity no-print rounded-lg">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                )}
+                <input 
+                  ref={fileInputKananRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => handleFileUpload(e, 'kanan')} 
+                  className="hidden" 
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Garis Pembatas Tunggal Bersih Sesuai Foto Surat Fisik */}
       <div className="kop-line"></div>

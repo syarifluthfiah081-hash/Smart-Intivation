@@ -58,11 +58,7 @@ export const exportToPdf = async (
       backgroundColor: '#ffffff',
       windowWidth: element.offsetWidth || 794,
       onclone: (clonedDoc: Document) => {
-        // Hapus link stylesheet eksternal Tailwind 4 yang mengandung fungsi oklch()
-        const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
-        links.forEach(link => link.remove());
-
-        // Sanitasi semua tag <style> di dalam dokumen klon
+        // Sanitasi semua tag <style> di dalam dokumen klon tanpa menghapus layout stylesheet
         const styleTags = clonedDoc.querySelectorAll('style');
         styleTags.forEach(styleTag => {
           if (styleTag.innerHTML) {
@@ -154,8 +150,6 @@ export const exportToPdf = async (
           }
           td, th {
             color: #000000 !important;
-            padding: 2.5px 0 !important;
-            font-size: 12px !important;
             font-family: "Times New Roman", Times, serif !important;
           }
           h1, h2, h3, h4, h5, h6, p, span, strong, b, u, em, td, th {
@@ -170,28 +164,9 @@ export const exportToPdf = async (
           .underline { text-decoration: underline !important; }
           .uppercase { text-transform: uppercase !important; }
           .indent-8 { text-indent: 2rem !important; }
-          .flex { display: flex !important; }
-          .justify-between { justify-content: space-between !important; }
-          .justify-end { justify-content: flex-end !important; }
-          .items-center { align-items: center !important; }
-          .items-start { align-items: flex-start !important; }
           .border { border: 1px solid #000000 !important; }
           .border-black { border-color: #000000 !important; }
-          .p-3 { padding: 0.75rem !important; }
-          .mt-1 { margin-top: 0.25rem !important; }
-          .mt-2 { margin-top: 0.5rem !important; }
-          .mt-4 { margin-top: 1rem !important; }
-          .mt-6 { margin-top: 1.5rem !important; }
-          .mt-8 { margin-top: 2rem !important; }
-          .mb-2 { margin-bottom: 0.5rem !important; }
-          .mb-3 { margin-bottom: 0.75rem !important; }
-          .mb-4 { margin-bottom: 1rem !important; }
-          .mb-5 { margin-bottom: 1.25rem !important; }
-          .mb-8 { margin-bottom: 2rem !important; }
-          .ml-6 { margin-left: 1.5rem !important; }
           .w-full { width: 100% !important; }
-          .w-40, .w-36 { width: 160px !important; }
-          .w-20 { width: 90px !important; }
         `;
         clonedDoc.head.appendChild(cleanStyle);
 
