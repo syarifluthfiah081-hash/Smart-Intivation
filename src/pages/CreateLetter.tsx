@@ -31,11 +31,7 @@ import {
   AlignJustify,
   Check,
   Code,
-  Sliders,
-  Upload,
-  CheckCircle2,
-  Building2,
-  X
+  CheckCircle2
 } from 'lucide-react';
 
 interface CreateLetterProps {
@@ -66,11 +62,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
   const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
   const [rawHtmlInput, setRawHtmlInput] = useState('');
 
-  // KOP Surat Edit Modal / Drawer
-  const [isKopModalOpen, setIsKopModalOpen] = useState(false);
-  const [kopFormData, setKopFormData] = useState<SchoolProfile>(DEFAULT_SCHOOL_PROFILE);
-  const [kopSaveMsg, setKopSaveMsg] = useState('');
-
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<'pdf' | 'word' | 'print' | null>(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -90,7 +81,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
           logoKananUrl: data.logoKananUrl || LOGO_KANAN_DEFAULT,
         };
         setProfile(fullData);
-        setKopFormData(fullData);
       } catch (err) {
         console.warn('Gagal mengambil profil sekolah, menggunakan default:', err);
       }
@@ -217,59 +207,23 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
     return `${docName}_${recipient}`;
   };
 
-  // ================= KOP SURAT EDIT HANDLERS =================
-  const handleKopInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setKopFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+  // ================= DIRECT ON-PAPER KOP SURAT EDIT HANDLERS =================
+  const handleKopChange = (field: keyof SchoolProfile, val: string) => {
+    setProfile(prev => {
+      const updated = { ...prev, [field]: val };
+      saveSchoolProfile(updated).catch(() => {});
+      return updated;
+    });
   };
 
-  const handleKopLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, side: 'kiri' | 'kanan') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Ukuran berkas logo maksimal 2MB!');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        if (side === 'kiri') {
-          setKopFormData(prev => ({ ...prev, logoUrl: base64 }));
-        } else {
-          setKopFormData(prev => ({ ...prev, logoKananUrl: base64 }));
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleApplyKopToLetter = () => {
-    setProfile(kopFormData);
-    setIsKopModalOpen(false);
-    setKopSaveMsg('');
-    // Re-render preview template if needed
-    if (!customBodyHtml) {
-      setCustomBodyHtml(selectedTemplate.generatePreviewHtml(formValues, kopFormData));
-    }
-  };
-
-  const handleSaveKopPermanently = async () => {
-    try {
-      await saveSchoolProfile(kopFormData);
-      setProfile(kopFormData);
-      setKopSaveMsg('✓ Kop surat & profil berhasil disimpan permanen!');
-      setTimeout(() => {
-        setKopSaveMsg('');
-        setIsKopModalOpen(false);
-      }, 1500);
-    } catch (err) {
-      console.warn('Gagal menyimpan profil:', err);
-      setProfile(kopFormData);
-      setIsKopModalOpen(false);
-    }
+  const handleLogoChange = (side: 'kiri' | 'kanan', base64: string) => {
+    setProfile(prev => {
+      const updated = side === 'kiri' 
+        ? { ...prev, logoUrl: base64 } 
+        : { ...prev, logoKananUrl: base64 };
+      saveSchoolProfile(updated).catch(() => {});
+      return updated;
+    });
   };
 
   // ================= DOCUMENT ACTIONS =================
@@ -406,25 +360,11 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
           <p className="text-xs text-slate-500 mt-0.5">
             {editLetterData 
               ? `Mengedit dokumen: ${editLetterData.typeName} (Nomor: ${editLetterData.refNumber})`
-              : 'Pilih jenis surat, isi formulir di kiri, atau klik dan edit langsung teks apa pun di lembar kertas sebelah kanan.'}
+              : 'Klik teks apa pun di lembar kertas sebelah kanan (Kop Surat, Isi Surat, dan Tanda Tangan) untuk mengedit secara langsung.'}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Quick Edit Kop Surat Button in Header */}
-          <button
-            type="button"
-            onClick={() => {
-              setKopFormData(profile);
-              setIsKopModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
-            title="Edit teks instansi, nama sekolah, alamat, dan logo pada Kop Surat"
-          >
-            <Sliders className="w-3.5 h-3.5 text-blue-600" />
-            <span>Akses Edit KOP Surat</span>
-          </button>
-
           {editLetterData && (
             <button
               onClick={onClearEdit}
@@ -501,26 +441,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                   Kertas F4 / Folio (215 x 330 mm)
                 </button>
               </div>
-            </div>
-
-            {/* KOP Surat Quick Access Button */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setKopFormData(profile);
-                  setIsKopModalOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
-              >
-                <span className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-blue-600" />
-                  <span>Kop Surat & Identitas Sekolah</span>
-                </span>
-                <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-extrabold">
-                  Edit KOP
-                </span>
-              </button>
             </div>
           </div>
 
@@ -643,7 +563,7 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
             <div className="flex gap-2 p-3 bg-slate-950/60 border border-slate-800 rounded-xl mt-3 text-[10px] text-slate-400">
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p>
-                Seluruh editan teks langsung di atas kertas akan ikut tersimpan ke riwayat dan terunduh saat Cetak, Ekspor PDF, maupun Ekspor Word.
+                Seluruh editan teks langsung di atas kertas (Kop Surat, Isi Surat & Tanda Tangan) akan ikut tersimpan ke riwayat dan terunduh persis sama saat Cetak, Ekspor PDF, maupun Ekspor Word.
               </p>
             </div>
           </div>
@@ -742,7 +662,7 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                   title="Klik untuk mengaktifkan/menonaktifkan mode ketik langsung"
                 >
                   <Edit3 className="w-3 h-3 text-blue-600" />
-                  <span>{isInlineEditing ? 'Mode Edit Bebas Aktif' : 'Mode Pratinjau Terkunci'}</span>
+                  <span>{isInlineEditing ? 'Mode Ketik Langsung Aktif' : 'Mode Pratinjau Terkunci'}</span>
                 </button>
 
               </div>
@@ -752,7 +672,7 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
             <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2 px-1 no-print">
               <span className="flex items-center gap-1 font-medium">
                 <Eye className="w-3.5 h-3.5 text-blue-500" />
-                Klik bagian teks mana saja di dalam kertas untuk mengedit isi surat sesuka Anda sebelum dicetak.
+                Ketik langsung di mana saja pada lembar kertas di bawah (Kop Surat, Isi, & TTD) untuk mengedit teks secara bebas.
               </span>
               <span className="text-[10px] bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded uppercase">
                 {paperSize.toUpperCase()}
@@ -767,16 +687,14 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                 id="letter-paper-render"
                 className={`paper-preview ${
                   paperSize === 'a4' ? 'paper-a4' : 'paper-f4'
-                } print:shadow-none print:border-none`}
+                } print:shadow-none print:border-none font-serif text-black`}
               >
-                {/* 1. Kop Surat Resmi SMKN 2 Tikep (Dual Logo Kiri & Kanan + Edit Badge) */}
+                {/* 1. Kop Surat Resmi SMKN 2 Tikep (Bisa Diedit Langsung di Kertas) */}
                 <LetterheadPreview 
                   profile={profile} 
-                  showEditBadge={true} 
-                  onEditKopClick={() => {
-                    setKopFormData(profile);
-                    setIsKopModalOpen(true);
-                  }} 
+                  isEditable={isInlineEditing}
+                  onKopChange={handleKopChange}
+                  onLogoChange={handleLogoChange}
                 />
 
                 {/* 2. Custom Letter Body (Inline WYSIWYG Content Editable) */}
@@ -790,20 +708,37 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                   dangerouslySetInnerHTML={{ __html: currentDisplayHtml }}
                 />
 
-                {/* 3. Signature Area (Formal Titimangsa and Principal info) */}
+                {/* 3. Signature Area (Formal Titimangsa and Principal info - Directly Editable on Paper) */}
                 {selectedTemplate.id !== 'surat-pernyataan' && selectedTemplate.id !== 'disposisi-surat' && (
                   <div className="mt-8 flex justify-end text-black font-serif text-[12px] avoid-break">
                     <div className="w-[220px] text-center">
-                      <p>Kepala Sekolah,</p>
-                      {/* Space for signing */}
-                      <div className="h-[75px] print:h-[55px] no-print flex items-center justify-center text-slate-300 text-[10px] border border-dashed border-slate-200 rounded my-2">
-                        Ruang Tanda Tangan & Stempel
-                      </div>
-                      {/* Spacer for printable signatures */}
-                      <div className="hidden print:block h-[55px]"></div>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        className="outline-none focus:bg-blue-50/50"
+                      >
+                        Kepala Sekolah,
+                      </p>
                       
-                      <p className="font-bold underline leading-snug">{profile.principalName || 'Ali Djumati.S.Pd.,M.Si'}</p>
-                      <p className="text-[11px] leading-tight">NIP. {profile.principalNip || '1977601062003121005'}</p>
+                      {/* Space for signing */}
+                      <div className="h-[60px]"></div>
+                      
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => handleKopChange('principalName', e.currentTarget.innerText.trim())}
+                        className="font-bold underline leading-snug outline-none focus:bg-blue-50/50"
+                      >
+                        {profile.principalName || 'Ali Djumati.S.Pd.,M.Si'}
+                      </p>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => handleKopChange('principalNip', e.currentTarget.innerText.replace(/^NIP\.\s*/i, '').trim())}
+                        className="text-[11px] leading-tight outline-none focus:bg-blue-50/50"
+                      >
+                        NIP. {profile.principalNip || '1977601062003121005'}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -812,23 +747,55 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                 {selectedTemplate.id === 'disposisi-surat' && (
                   <div className="mt-6 flex justify-between items-start text-black font-serif text-[12px] avoid-break">
                     <div className="w-[200px] text-center">
-                      <p>Mengetahui / Menerima,</p>
-                      <div className="h-[60px] no-print flex items-center justify-center text-slate-300 text-[10px] border border-dashed border-slate-200 rounded my-2">
-                        Paraf Pejabat Disposisi
-                      </div>
-                      <div className="hidden print:block h-[50px]"></div>
-                      <p className="font-bold underline">( ............................................ )</p>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        className="outline-none focus:bg-blue-50/50"
+                      >
+                        Mengetahui / Menerima,
+                      </p>
+                      <div className="h-[60px]"></div>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        className="font-bold underline outline-none focus:bg-blue-50/50"
+                      >
+                        ( ............................................ )
+                      </p>
                     </div>
 
                     <div className="w-[220px] text-center">
-                      <p>Tidore, {formatDateIndo(formValues.tanggal_diterima || new Date().toISOString())}</p>
-                      <p className="font-semibold">Kepala Sekolah,</p>
-                      <div className="h-[60px] no-print flex items-center justify-center text-slate-300 text-[10px] border border-dashed border-slate-200 rounded my-2">
-                        Tanda Tangan & Stempel
-                      </div>
-                      <div className="hidden print:block h-[50px]"></div>
-                      <p className="font-bold underline">{profile.principalName || 'Ali Djumati.S.Pd.,M.Si'}</p>
-                      <p className="text-[11px]">NIP. {profile.principalNip || '1977601062003121005'}</p>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        className="outline-none focus:bg-blue-50/50"
+                      >
+                        Tidore, {formatDateIndo(formValues.tanggal_diterima || new Date().toISOString())}
+                      </p>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        className="font-semibold outline-none focus:bg-blue-50/50"
+                      >
+                        Kepala Sekolah,
+                      </p>
+                      <div className="h-[60px]"></div>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => handleKopChange('principalName', e.currentTarget.innerText.trim())}
+                        className="font-bold underline outline-none focus:bg-blue-50/50"
+                      >
+                        {profile.principalName || 'Ali Djumati.S.Pd.,M.Si'}
+                      </p>
+                      <p 
+                        contentEditable={isInlineEditing}
+                        suppressContentEditableWarning={true}
+                        onBlur={(e) => handleKopChange('principalNip', e.currentTarget.innerText.replace(/^NIP\.\s*/i, '').trim())}
+                        className="text-[11px] outline-none focus:bg-blue-50/50"
+                      >
+                        NIP. {profile.principalNip || '1977601062003121005'}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -840,215 +807,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
         </div>
 
       </div>
-
-      {/* ================= MODAL EDIT KOP SURAT ================= */}
-      {isKopModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 space-y-5 max-h-[92vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                  <Building2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-800">Edit KOP Surat & Data Sekolah</h3>
-                  <p className="text-xs text-slate-500">Ubah teks instansi, nama sekolah, alamat, email, dan logo Kop Surat.</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsKopModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {kopSaveMsg && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{kopSaveMsg}</span>
-              </div>
-            )}
-
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-              {/* Dept Name */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Nama Departemen / Dinas Pendidikan (Baris 1 Kop)
-                </label>
-                <textarea
-                  name="deptName"
-                  rows={2}
-                  value={kopFormData.deptName || ''}
-                  onChange={handleKopInputChange}
-                  placeholder="PEMERINTAH PROVINSI MALUKU UTARA&#10;DINAS PENDIDIKAN DAN KEBUDAYAAN"
-                  className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl"
-                />
-              </div>
-
-              {/* School Name */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1">
-                  Nama Resmi Sekolah (Baris Utama Kop)
-                </label>
-                <input
-                  type="text"
-                  name="schoolName"
-                  value={kopFormData.schoolName || ''}
-                  onChange={handleKopInputChange}
-                  placeholder="SMK NEGERI 2 KOTA TIDORE KEPULAUAN"
-                  className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl font-bold"
-                />
-              </div>
-
-              {/* Address & Email */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Alamat Sekolah</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={kopFormData.address || ''}
-                    onChange={handleKopInputChange}
-                    placeholder="Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan"
-                    className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Email Sekolah</label>
-                  <input
-                    type="text"
-                    name="email"
-                    value={kopFormData.email || ''}
-                    onChange={handleKopInputChange}
-                    placeholder="smkn2tidore@yahoo.com"
-                    className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              {/* Principal Name & NIP */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Nama Kepala Sekolah</label>
-                  <input
-                    type="text"
-                    name="principalName"
-                    value={kopFormData.principalName || ''}
-                    onChange={handleKopInputChange}
-                    placeholder="Ali Djumati.S.Pd.,M.Si"
-                    className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">NIP Kepala Sekolah</label>
-                  <input
-                    type="text"
-                    name="principalNip"
-                    value={kopFormData.principalNip || ''}
-                    onChange={handleKopInputChange}
-                    placeholder="1977601062003121005"
-                    className="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 rounded-xl"
-                  />
-                </div>
-              </div>
-
-              {/* Logo Kiri & Logo Kanan Upload */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                {/* Logo Kiri */}
-                <div className="space-y-2">
-                  <span className="text-[11px] font-bold text-slate-700 block">Logo Kiri (Pemda / Pemprov)</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 border border-slate-200 rounded-lg p-1 flex items-center justify-center bg-white overflow-hidden flex-shrink-0">
-                      <img 
-                        src={kopFormData.logoUrl || LOGO_KIRI_DEFAULT} 
-                        alt="Logo Kiri" 
-                        className="w-full h-full object-contain" 
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg cursor-pointer transition-colors">
-                        <Upload className="w-3 h-3" />
-                        <span>Ganti Logo Kiri</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => handleKopLogoUpload(e, 'kiri')} 
-                          className="hidden" 
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setKopFormData(p => ({ ...p, logoUrl: LOGO_KIRI_DEFAULT }))}
-                        className="block text-[9px] text-blue-600 hover:underline mt-1 cursor-pointer"
-                      >
-                        Reset Logo Default
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Logo Kanan */}
-                <div className="space-y-2">
-                  <span className="text-[11px] font-bold text-slate-700 block">Logo Kanan (SMKN 2 Tikep)</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 border border-slate-200 rounded-lg p-1 flex items-center justify-center bg-white overflow-hidden flex-shrink-0">
-                      <img 
-                        src={kopFormData.logoKananUrl || LOGO_KANAN_DEFAULT} 
-                        alt="Logo Kanan" 
-                        className="w-full h-full object-contain" 
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg cursor-pointer transition-colors">
-                        <Upload className="w-3 h-3" />
-                        <span>Ganti Logo Kanan</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => handleKopLogoUpload(e, 'kanan')} 
-                          className="hidden" 
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setKopFormData(p => ({ ...p, logoKananUrl: LOGO_KANAN_DEFAULT }))}
-                        className="block text-[9px] text-blue-600 hover:underline mt-1 cursor-pointer"
-                      >
-                        Reset Logo Default
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setIsKopModalOpen(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 cursor-pointer"
-              >
-                Tutup
-              </button>
-              <button
-                type="button"
-                onClick={handleApplyKopToLetter}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
-              >
-                Terapkan ke Surat Ini
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveKopPermanently}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
-              >
-                Simpan Permanen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ================= RAW HTML CODE EDITOR MODAL ================= */}
       {isHtmlModalOpen && (
