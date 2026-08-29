@@ -70,7 +70,7 @@ export const exportToPdf = async (
           }
         });
 
-        // Suntikkan CSS resmi murni dengan ukuran logo 75px dan tipografi kop yang gagah & presisi
+        // Suntikkan CSS resmi murni dengan ukuran logo 82px dan tata letak KOP persis foto surat asli
         const cleanStyle = clonedDoc.createElement('style');
         cleanStyle.innerHTML = `
           * {
@@ -104,30 +104,30 @@ export const exportToPdf = async (
             min-height: 330mm !important;
           }
 
-          /* Logo KOP Surat Proporsional & Gagah (75px) */
+          /* Logo KOP Surat Persis Foto Asli (82px) */
           img {
-            max-width: 75px !important;
-            max-height: 75px !important;
-            width: 75px !important;
-            height: 75px !important;
+            max-width: 82px !important;
+            max-height: 82px !important;
+            width: 82px !important;
+            height: 82px !important;
             object-fit: contain !important;
             display: block !important;
             margin: 0 auto !important;
           }
-          .w-\\[72px\\] {
-            width: 75px !important;
-            height: 75px !important;
-            min-width: 75px !important;
-            max-width: 75px !important;
-            max-height: 75px !important;
+          .w-\\[82px\\], .w-\\[72px\\] {
+            width: 82px !important;
+            height: 82px !important;
+            min-width: 82px !important;
+            max-width: 82px !important;
+            max-height: 82px !important;
           }
 
-          /* Garis Tunggal KOP Surat Bersih Sesuai Aplikasi dengan Spasi Bawah Mantap */
+          /* Garis Tunggal KOP Surat Bersih Sesuai Foto Surat Asli */
           .kop-line {
             border-bottom: 2.5px solid #000000 !important;
             border-top: none !important;
             height: 0 !important;
-            margin-top: 8px !important;
+            margin-top: 6px !important;
             margin-bottom: 22px !important;
           }
 

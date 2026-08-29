@@ -164,7 +164,6 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
       else if (tagName === 'div' && (el.classList.contains('border') || el.classList.contains('border-black'))) {
         const innerParagraphs: Paragraph[] = [];
         
-        // Ambil setiap baris atau child element di dalam kotak secara terpisah
         const lines = el.innerText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         
         if (lines.length > 0) {
@@ -221,7 +220,6 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
 
       // 4. Paragraf biasa atau Container Div
       else if (tagName === 'p' || tagName === 'div' || tagName === 'li') {
-        // Jika container div membungkus elemen kompleks, proses child-nya
         if (el.querySelector('table, h1, h2, h3, h4, .border') && tagName === 'div') {
           Array.from(el.children).forEach(child => processElement(child as HTMLElement));
           return;
@@ -275,7 +273,7 @@ export const exportToDocx = async (
   filename: string,
   customBodyHtml?: string
 ): Promise<void> => {
-  // 1. Dual Logos dengan Pembersihan Background Hitam Otomatis (Ukuran Proporsional 65 x 65 pt)
+  // 1. Dual Logos dengan Pembersihan Background Hitam Otomatis (Ukuran Gagah 75 x 75 pt)
   let leftLogoRun: Paragraph[] = [];
   let rightLogoRun: Paragraph[] = [];
 
@@ -307,7 +305,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: leftBytes,
-              transformation: { width: 65, height: 65 },
+              transformation: { width: 75, height: 75 },
             } as any),
           ],
         }),
@@ -324,7 +322,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: rightBytes,
-              transformation: { width: 65, height: 65 },
+              transformation: { width: 75, height: 75 },
             } as any),
           ],
         }),
@@ -332,7 +330,7 @@ export const exportToDocx = async (
     }
   }
 
-  // 2. Kop Surat Table (HANYA SATU garis bawah tebal bersih sesuai aplikasi)
+  // 2. Kop Surat Table (HANYA SATU garis bawah tebal bersih sesuai foto asli)
   const kopRows = [
     new TableRow({
       children: [
@@ -363,7 +361,7 @@ export const exportToDocx = async (
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 15 },
                 children: [
-                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 22, font: 'Times New Roman' }),
+                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 23, font: 'Times New Roman' }),
                 ],
               })
             ] : []),
@@ -372,7 +370,7 @@ export const exportToDocx = async (
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 15 },
                 children: [
-                  new TextRun({ text: line.toUpperCase(), bold: true, size: 22, font: 'Times New Roman' }),
+                  new TextRun({ text: line.toUpperCase(), bold: true, size: 23, font: 'Times New Roman' }),
                 ],
               })
             ) : []),
@@ -380,7 +378,7 @@ export const exportToDocx = async (
               alignment: AlignmentType.CENTER,
               spacing: { before: 15, after: 25 },
               children: [
-                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 26, font: 'Times New Roman' }),
+                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 27, font: 'Times New Roman' }),
               ],
             }),
             new Paragraph({
