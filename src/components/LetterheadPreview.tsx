@@ -83,7 +83,7 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
   return (
     <div className="w-full bg-white select-none relative group">
       {/* Optional Top Bar with Quick Edit KOP Surat */}
-      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2 no-print text-[10px] text-slate-400">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-2 no-print text-[10px] text-slate-400">
         <span className="font-semibold text-slate-500 flex items-center gap-1.5">
           <span>Kop Surat Resmi SMKN 2 Kota Tidore Kepulauan</span>
         </span>
@@ -98,19 +98,19 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-black font-serif">
+      <div className="flex items-center justify-between gap-3 text-black font-serif">
         {/* Left Logo (Hijau - Pemda / Provinsi Maluku Utara) */}
-        <div className="w-[72px] h-[72px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
+        <div className="w-[60px] h-[60px] min-w-[60px] max-w-[60px] max-h-[60px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
           {processedLogoKiri || data.logoUrl ? (
             <img 
               src={processedLogoKiri || data.logoUrl} 
               alt="Logo Pemda (Kiri)" 
-              className="w-full h-full object-contain"
+              className="w-full h-full max-w-[60px] max-h-[60px] object-contain block"
               loading="eager"
             />
           ) : (
             <div className="flex flex-col items-center text-slate-400 print:text-black">
-              <School className="w-7 h-7 stroke-[1.5]" />
+              <School className="w-6 h-6 stroke-[1.5]" />
               <span className="text-[7px] font-sans no-print">Logo Kiri</span>
             </div>
           )}
@@ -119,19 +119,19 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
         {/* Center Text Section */}
         <div className="flex-1 text-center px-1 font-serif">
           {data.foundationName && (
-            <h4 className="text-[12px] uppercase font-bold leading-snug tracking-normal text-black">
+            <h4 className="text-[11px] uppercase font-bold leading-snug tracking-normal text-black">
               {data.foundationName}
             </h4>
           )}
           {data.deptName && (
-            <div className="text-[12px] md:text-[13px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black">
+            <div className="text-[11.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black">
               {data.deptName}
             </div>
           )}
-          <h3 className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black">
+          <h3 className="text-[13.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black">
             {data.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}
           </h3>
-          <p className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif">
+          <p className="text-[10px] leading-tight mt-0.5 font-normal text-black font-serif">
             <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
             {data.email && (
               <span className="ml-2 font-serif">
@@ -147,17 +147,17 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
         </div>
 
         {/* Right Logo (Biru - SMKN 2 Tidore Kepulauan) */}
-        <div className="w-[72px] h-[72px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
+        <div className="w-[60px] h-[60px] min-w-[60px] max-w-[60px] max-h-[60px] flex-shrink-0 flex items-center justify-center bg-white overflow-hidden">
           {processedLogoKanan || data.logoKananUrl ? (
             <img 
               src={processedLogoKanan || data.logoKananUrl} 
               alt="Logo SMKN 2 Tikep (Kanan)" 
-              className="w-full h-full object-contain"
+              className="w-full h-full max-w-[60px] max-h-[60px] object-contain block"
               loading="eager"
             />
           ) : (
             <div className="flex flex-col items-center text-slate-400 print:text-black">
-              <School className="w-7 h-7 stroke-[1.5]" />
+              <School className="w-6 h-6 stroke-[1.5]" />
               <span className="text-[7px] font-sans no-print">Logo Kanan</span>
             </div>
           )}

@@ -72,8 +72,8 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
         if (text) {
           elements.push(
             new Paragraph({
-              spacing: { after: 100, line: 276 },
-              children: [new TextRun({ text, font: 'Times New Roman', size: 23 })],
+              spacing: { after: 80, line: 260 },
+              children: [new TextRun({ text, font: 'Times New Roman', size: 22 })],
             })
           );
         }
@@ -90,14 +90,14 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
           elements.push(
             new Paragraph({
               alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-              spacing: { before: 120, after: 80 },
+              spacing: { before: 100, after: 60 },
               children: [
                 new TextRun({
                   text,
                   bold: true,
                   underline: isUnderlined ? {} : undefined,
                   font: 'Times New Roman',
-                  size: tagName === 'h1' ? 28 : tagName === 'h2' ? 26 : tagName === 'h3' ? 24 : 23,
+                  size: tagName === 'h1' ? 28 : tagName === 'h2' ? 26 : tagName === 'h3' ? 24 : 22,
                 }),
               ],
             })
@@ -122,7 +122,7 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
               cells.push(
                 new TableCell({
                   width: { 
-                    size: idx === 0 && tds.length > 1 ? 28 : idx === 1 && tds.length === 2 ? 72 : Math.floor(100 / tds.length), 
+                    size: idx === 0 && tds.length > 1 ? 26 : idx === 1 && tds.length === 2 ? 74 : Math.floor(100 / tds.length), 
                     type: WidthType.PERCENTAGE 
                   },
                   borders: hasCellBorder ? {
@@ -133,7 +133,7 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
                   } : BORDERLESS_CELL,
                   children: [
                     new Paragraph({
-                      spacing: { before: 30, after: 30, line: 260 },
+                      spacing: { before: 20, after: 20, line: 240 },
                       children: [
                         new TextRun({
                           text,
@@ -157,7 +157,14 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
             elements.push(
               new Table({
                 width: { size: 100, type: WidthType.PERCENTAGE },
-                borders: isExplicitBorderedTable ? undefined : BORDERLESS_TABLE,
+                borders: isExplicitBorderedTable ? {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                } : BORDERLESS_TABLE,
                 rows: tableRows,
               })
             );
@@ -191,13 +198,13 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
                   ? AlignmentType.JUSTIFIED 
                   : AlignmentType.LEFT,
                 indent: isIndented ? { left: 480 } : undefined,
-                spacing: { before: 40, after: 100, line: 276 },
+                spacing: { before: 30, after: 80, line: 260 },
                 children: [
                   new TextRun({
                     text,
                     bold: isBold,
                     font: 'Times New Roman',
-                    size: 23,
+                    size: 22,
                   }),
                 ],
               })
@@ -224,7 +231,7 @@ export const exportToDocx = async (
   filename: string,
   customBodyHtml?: string
 ): Promise<void> => {
-  // 1. Dual Logos
+  // 1. Dual Logos (Ukuran kompak & proporsional: 48 x 48 pt)
   let leftLogoRun: Paragraph[] = [];
   let rightLogoRun: Paragraph[] = [];
 
@@ -237,7 +244,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: leftBytes,
-              transformation: { width: 65, height: 65 },
+              transformation: { width: 48, height: 48 },
             } as any),
           ],
         }),
@@ -254,7 +261,7 @@ export const exportToDocx = async (
           children: [
             new ImageRun({
               data: rightBytes,
-              transformation: { width: 65, height: 65 },
+              transformation: { width: 48, height: 48 },
             } as any),
           ],
         }),
@@ -266,9 +273,9 @@ export const exportToDocx = async (
   const kopRows = [
     new TableRow({
       children: [
-        // Left Logo Cell (16%)
+        // Left Logo Cell (14%)
         new TableCell({
-          width: { size: 16, type: WidthType.PERCENTAGE },
+          width: { size: 14, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -278,9 +285,9 @@ export const exportToDocx = async (
           children: leftLogoRun.length > 0 ? leftLogoRun : [new Paragraph({ text: '' })],
         }),
 
-        // Center Info Cell (68%)
+        // Center Info Cell (72%)
         new TableCell({
-          width: { size: 68, type: WidthType.PERCENTAGE },
+          width: { size: 72, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -291,16 +298,16 @@ export const exportToDocx = async (
             ...(profile.foundationName ? [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { after: 20 },
+                spacing: { after: 10 },
                 children: [
-                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 21, font: 'Times New Roman' }),
+                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 20, font: 'Times New Roman' }),
                 ],
               })
             ] : []),
             ...(profile.deptName ? profile.deptName.split('\n').map(line => 
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { after: 20 },
+                spacing: { after: 10 },
                 children: [
                   new TextRun({ text: line.toUpperCase(), bold: true, size: 21, font: 'Times New Roman' }),
                 ],
@@ -308,14 +315,14 @@ export const exportToDocx = async (
             ) : []),
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { before: 20, after: 30 },
+              spacing: { before: 10, after: 20 },
               children: [
-                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 25, font: 'Times New Roman' }),
+                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 24, font: 'Times New Roman' }),
               ],
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { after: 40 },
+              spacing: { after: 30 },
               children: [
                 new TextRun({ 
                   text: `${profile.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}${profile.email ? `  E-Maile: ${profile.email}` : ''}`, 
@@ -327,9 +334,9 @@ export const exportToDocx = async (
           ],
         }),
 
-        // Right Logo Cell (16%)
+        // Right Logo Cell (14%)
         new TableCell({
-          width: { size: 16, type: WidthType.PERCENTAGE },
+          width: { size: 14, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -388,7 +395,7 @@ export const exportToDocx = async (
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
-                  spacing: { line: 260 },
+                  spacing: { line: 240 },
                   children: [
                     new TextRun({ text: `${dateStr}\n`, font: 'Times New Roman', size: 22 }),
                     new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
@@ -415,7 +422,7 @@ export const exportToDocx = async (
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
-                  spacing: { line: 260 },
+                  spacing: { line: 240 },
                   children: [
                     new TextRun({ text: 'Mengetahui / Menerima,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
                     new TextRun({ text: '( ............................................ )', bold: true, font: 'Times New Roman', size: 22 }),
@@ -429,7 +436,7 @@ export const exportToDocx = async (
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
-                  spacing: { line: 260 },
+                  spacing: { line: 240 },
                   children: [
                     new TextRun({ text: `${dateStr}\n`, font: 'Times New Roman', size: 22 }),
                     new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
@@ -461,10 +468,10 @@ export const exportToDocx = async (
         },
         children: [
           kopTable,
-          new Paragraph({ text: '', spacing: { before: 180 } }),
+          new Paragraph({ text: '', spacing: { before: 140 } }),
           ...bodyElements,
           ...(signatureTable ? [
-            new Paragraph({ text: '', spacing: { before: 240 } }),
+            new Paragraph({ text: '', spacing: { before: 200 } }),
             signatureTable,
           ] : []),
         ],

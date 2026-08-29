@@ -59,7 +59,6 @@ export const exportToPdf = async (
       windowWidth: element.offsetWidth || 794,
       onclone: (clonedDoc: Document) => {
         // Hapus link stylesheet eksternal Tailwind 4 yang mengandung fungsi oklch()
-        // agar parser html2canvas tidak error "unsupported color function oklch"
         const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
         links.forEach(link => link.remove());
 
@@ -71,11 +70,11 @@ export const exportToPdf = async (
           }
         });
 
-        // Suntikkan CSS resmi murni bebas oklch khusus untuk rendering surat dinas
+        // Suntikkan CSS resmi murni bebas oklch dengan ukuran logo proporsional
         const cleanStyle = clonedDoc.createElement('style');
         cleanStyle.innerHTML = `
           * {
-            box-sizing: border-box;
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact;
             color-adjust: exact;
           }
@@ -104,13 +103,34 @@ export const exportToPdf = async (
             width: 215mm !important;
             min-height: 330mm !important;
           }
+
+          /* Logo KOP Surat Presisi Proporsional (Maksimal 60px) */
+          img {
+            max-width: 60px !important;
+            max-height: 60px !important;
+            width: 60px !important;
+            height: 60px !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important;
+          }
+          .w-\\[60px\\], .w-\\[72px\\] {
+            width: 60px !important;
+            height: 60px !important;
+            min-width: 60px !important;
+            max-width: 60px !important;
+            max-height: 60px !important;
+          }
+
+          /* Garis Ganda KOP Surat Bersih & Proporsional */
           .kop-line {
-            border-top: 2.5px solid #000000 !important;
+            border-top: 2px solid #000000 !important;
             border-bottom: 0.8px solid #000000 !important;
             height: 2px !important;
             margin-top: 4px !important;
-            margin-bottom: 14px !important;
+            margin-bottom: 12px !important;
           }
+
           .no-print {
             display: none !important;
           }
@@ -121,11 +141,14 @@ export const exportToPdf = async (
             padding: 0 !important;
           }
           table {
-            border-collapse: collapse;
-            width: 100%;
+            border-collapse: collapse !important;
+            width: 100% !important;
           }
           td, th {
             color: #000000 !important;
+            padding: 2px 0 !important;
+            font-size: 12px !important;
+            font-family: "Times New Roman", Times, serif !important;
           }
           h1, h2, h3, h4, h5, h6, p, span, strong, b, u, em, td, th {
             color: #000000 !important;
@@ -159,6 +182,8 @@ export const exportToPdf = async (
           .mb-8 { margin-bottom: 2rem !important; }
           .ml-6 { margin-left: 1.5rem !important; }
           .w-full { width: 100% !important; }
+          .w-40, .w-36 { width: 150px !important; }
+          .w-20 { width: 80px !important; }
         `;
         clonedDoc.head.appendChild(cleanStyle);
 
