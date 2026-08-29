@@ -150,7 +150,8 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
                   contentEditable={isEditable}
                   suppressContentEditableWarning={true}
                   onBlur={(e) => onKopChange && onKopChange('foundationName', e.currentTarget.innerText.trim())}
-                  className="text-[13px] uppercase font-bold leading-tight tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                  className="kop-foundation text-[13px] uppercase font-bold leading-tight tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                  style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '13px', fontWeight: 'bold', lineHeight: '1.2', textTransform: 'uppercase', color: '#000000', margin: 0, padding: 0 }}
                 >
                   {data.foundationName}
                 </h4>
@@ -160,7 +161,8 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
                 contentEditable={isEditable}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => onKopChange && onKopChange('deptName', e.currentTarget.innerText.trim())}
-                className="text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                className="kop-dept text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '14.5px', fontWeight: 'bold', lineHeight: '1.2', textTransform: 'uppercase', color: '#000000', margin: 0, padding: 0 }}
               >
                 {data.deptName}
               </div>
@@ -169,7 +171,8 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
                 contentEditable={isEditable}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => onKopChange && onKopChange('schoolName', e.currentTarget.innerText.trim())}
-                className="text-[14.5px] md:text-[15.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                className="kop-school text-[14.5px] md:text-[15.5px] uppercase font-bold leading-tight tracking-normal mt-0.5 text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '15.5px', fontWeight: 'bold', lineHeight: '1.2', textTransform: 'uppercase', color: '#000000', marginTop: '2px', marginBottom: 0, padding: 0 }}
               >
                 {data.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}
               </h3>
@@ -178,12 +181,13 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
                 contentEditable={isEditable}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => onKopChange && onKopChange('address', e.currentTarget.innerText.trim())}
-                className="text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                className="kop-address text-[10px] md:text-[10.5px] leading-tight mt-0.5 font-normal text-black font-serif outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '10.5px', fontWeight: 'normal', lineHeight: '1.2', color: '#000000', marginTop: '3px', marginBottom: 0, padding: 0 }}
               >
                 <span>{data.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}</span>
                 {data.email && (
-                  <span className="ml-2 font-serif">
-                    <em>E-Maile:</em>{data.email}
+                  <span className="ml-1 font-serif">
+                    <em>E-Maile:</em><u>{data.email}</u>
                   </span>
                 )}
                 {data.phone && (

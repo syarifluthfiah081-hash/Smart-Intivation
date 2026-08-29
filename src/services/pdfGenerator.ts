@@ -127,7 +127,7 @@ export const exportToPdf = async (
           }
 
           /* Logo KOP Surat Persis Foto Asli (82px) */
-          img {
+          .paper-preview table img, td img {
             max-width: 82px !important;
             max-height: 82px !important;
             width: 82px !important;
@@ -144,13 +144,57 @@ export const exportToPdf = async (
             max-height: 82px !important;
           }
 
+          /* Reset Margin dan Style Khusus KOP Typography agar Render PDF Presisi 100% */
+          .kop-foundation {
+            font-family: "Times New Roman", Times, serif !important;
+            font-size: 13px !important;
+            font-weight: bold !important;
+            line-height: 1.2 !important;
+            text-transform: uppercase !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .kop-dept {
+            font-family: "Times New Roman", Times, serif !important;
+            font-size: 14.5px !important;
+            font-weight: bold !important;
+            line-height: 1.2 !important;
+            text-transform: uppercase !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .kop-school {
+            font-family: "Times New Roman", Times, serif !important;
+            font-size: 15.5px !important;
+            font-weight: bold !important;
+            line-height: 1.2 !important;
+            text-transform: uppercase !important;
+            color: #000000 !important;
+            margin-top: 2px !important;
+            margin-bottom: 0 !important;
+            padding: 0 !important;
+          }
+          .kop-address {
+            font-family: "Times New Roman", Times, serif !important;
+            font-size: 10.5px !important;
+            font-weight: normal !important;
+            line-height: 1.2 !important;
+            color: #000000 !important;
+            margin-top: 3px !important;
+            margin-bottom: 0 !important;
+            padding: 0 !important;
+          }
+
           /* Garis Tunggal KOP Surat Bersih Sesuai Foto Surat Asli */
           .kop-line {
             border-bottom: 2.5px solid #000000 !important;
             border-top: none !important;
             height: 0 !important;
             margin-top: 6px !important;
-            margin-bottom: 22px !important;
+            margin-bottom: 20px !important;
+            width: 100% !important;
           }
 
           /* Ruang Tanda Tangan Kokoh 60px */
