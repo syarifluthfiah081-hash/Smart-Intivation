@@ -14,15 +14,14 @@ import {
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { formatDateIndo } from '../templates/letterTemplates';
 
-// Helper to convert base64 data url or raw base64 to Uint8Array for docx ImageRun
+// Helper to convert base64 data url to Uint8Array for docx ImageRun
 function base64ToUint8Array(base64: string): Uint8Array | null {
   if (!base64 || typeof base64 !== 'string') return null;
   try {
     const parts = base64.split(';base64,');
     const raw = parts.length > 1 ? parts[1] : parts[0];
-    
-    // Validate if valid base64
     const cleanRaw = raw.replace(/\s/g, '');
+    
     if (!/^[A-Za-z0-9+/=]+$/.test(cleanRaw)) {
       return null;
     }
@@ -40,84 +39,170 @@ function base64ToUint8Array(base64: string): Uint8Array | null {
   }
 }
 
-// Convert HTML string to DOCX Paragraphs
-function parseHtmlToDocxParagraphs(html: string): Paragraph[] {
+// Convert HTML element to structured DOCX Paragraphs and Tables
+function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
   if (!html) return [];
-  const paragraphs: Paragraph[] = [];
+  const elements: (Paragraph | Table)[] = [];
   
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const body = doc.body;
 
-    const traverse = (node: Node) => {
+    const processNode = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent?.trim();
         if (text) {
-          paragraphs.push(
+          elements.push(
             new Paragraph({
-              spacing: { after: 120 },
-              children: [new TextRun({ text, font: 'Times New Roman', size: 22 })],
+              spacing: { after: 100, line: 276 },
+              children: [new TextRun({ text, font: 'Times New Roman', size: 23 })],
             })
           );
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
         const tagName = el.tagName.toLowerCase();
-        
-        if (tagName === 'p' || tagName === 'div' || tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || tagName === 'h4' || tagName === 'li') {
-          const text = el.innerText?.trim();
+
+        // 1. Heading Elements (h1, h2, h3, h4)
+        if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3' || tagName === 'h4') {
+          const text = el.textContent?.trim() || '';
+          const isCentered = el.classList.contains('text-center') || el.style.textAlign === 'center' || el.parentElement?.classList.contains('text-center');
+          const isUnderlined = el.classList.contains('underline') || el.style.textDecoration.includes('underline');
+          
+          elements.push(
+            new Paragraph({
+              alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+              spacing: { before: 120, after: 80 },
+              children: [
+                new TextRun({
+                  text,
+                  bold: true,
+                  underline: isUnderlined ? {} : undefined,
+                  font: 'Times New Roman',
+                  size: tagName === 'h1' ? 28 : tagName === 'h2' ? 26 : tagName === 'h3' ? 24 : 23,
+                }),
+              ],
+            })
+          );
+        }
+
+        // 2. Table Element
+        else if (tagName === 'table') {
+          const trs = el.querySelectorAll('tr');
+          const tableRows: TableRow[] = [];
+
+          trs.forEach(tr => {
+            const tds = tr.querySelectorAll('td, th');
+            const cells: TableCell[] = [];
+
+            tds.forEach((td, idx) => {
+              const text = td.textContent?.trim() || '';
+              const isBold = td.querySelector('strong, b') !== null;
+              const hasBorder = el.classList.contains('border') || td.classList.contains('border');
+
+              cells.push(
+                new TableCell({
+                  width: { 
+                    size: idx === 0 && tds.length > 1 ? 30 : idx === 1 && tds.length === 2 ? 70 : Math.floor(100 / tds.length), 
+                    type: WidthType.PERCENTAGE 
+                  },
+                  borders: hasBorder ? {
+                    top: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                    bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                    left: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                    right: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+                  } : {
+                    top: { style: BorderStyle.NONE },
+                    bottom: { style: BorderStyle.NONE },
+                    left: { style: BorderStyle.NONE },
+                    right: { style: BorderStyle.NONE },
+                  },
+                  children: [
+                    new Paragraph({
+                      spacing: { after: 60, line: 260 },
+                      children: [
+                        new TextRun({
+                          text,
+                          bold: isBold,
+                          font: 'Times New Roman',
+                          size: 22,
+                        }),
+                      ],
+                    }),
+                  ],
+                })
+              );
+            });
+
+            if (cells.length > 0) {
+              tableRows.push(new TableRow({ children: cells }));
+            }
+          });
+
+          if (tableRows.length > 0) {
+            elements.push(
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: tableRows,
+              })
+            );
+          }
+        }
+
+        // 3. Paragraph & Div elements
+        else if (tagName === 'p' || tagName === 'div' || tagName === 'li') {
+          // If it's a container box (border & padding)
+          const isBox = el.classList.contains('border') || el.classList.contains('bg-slate-50');
+          const isCentered = el.classList.contains('text-center') || el.style.textAlign === 'center';
+          const isRight = el.classList.contains('text-right') || el.style.textAlign === 'right';
+          const isJustify = el.classList.contains('text-justify') || el.style.textAlign === 'justify';
+          const isIndented = el.classList.contains('indent-8') || el.classList.contains('ml-6');
+
+          // If container contains nested tables or child divs, process children
+          if (el.querySelector('table, h1, h2, h3, h4') && tagName === 'div') {
+            Array.from(el.childNodes).forEach(child => processNode(child));
+            return;
+          }
+
+          const text = el.textContent?.trim() || '';
           if (text) {
-            const isBold = tagName.startsWith('h') || el.style.fontWeight === 'bold' || el.querySelector('b, strong') !== null;
-            paragraphs.push(
+            const isBold = el.querySelector('strong, b') !== null && el.children.length === 1;
+
+            elements.push(
               new Paragraph({
-                spacing: { after: 120 },
+                alignment: isCentered 
+                  ? AlignmentType.CENTER 
+                  : isRight 
+                  ? AlignmentType.RIGHT 
+                  : isJustify 
+                  ? AlignmentType.JUSTIFIED 
+                  : AlignmentType.LEFT,
+                indent: isIndented ? { left: 480 } : undefined,
+                spacing: { before: isBox ? 80 : 40, after: isBox ? 80 : 100, line: 276 },
                 children: [
                   new TextRun({
                     text,
                     bold: isBold,
                     font: 'Times New Roman',
-                    size: tagName === 'h1' ? 26 : tagName === 'h2' ? 24 : 22,
+                    size: 23,
                   }),
                 ],
               })
             );
           }
-        } else if (tagName === 'table') {
-          // Table element: extract rows as text paragraphs
-          const rows = el.querySelectorAll('tr');
-          rows.forEach(tr => {
-            const cells = tr.querySelectorAll('td, th');
-            const rowTexts: string[] = [];
-            cells.forEach(td => rowTexts.push(td.textContent?.trim() || ''));
-            if (rowTexts.length > 0) {
-              paragraphs.push(
-                new Paragraph({
-                  spacing: { after: 80 },
-                  indent: { left: 360 },
-                  children: [
-                    new TextRun({
-                      text: rowTexts.join(' : '),
-                      font: 'Times New Roman',
-                      size: 21,
-                    }),
-                  ],
-                })
-              );
-            }
-          });
         } else {
-          node.childNodes.forEach(child => traverse(child));
+          Array.from(node.childNodes).forEach(child => processNode(child));
         }
       }
     };
 
-    body.childNodes.forEach(child => traverse(child));
+    Array.from(body.childNodes).forEach(child => processNode(child));
   } catch (err) {
     console.warn('Gagal mem-parsing HTML ke format DOCX:', err);
   }
 
-  return paragraphs;
+  return elements;
 }
 
 export const exportToDocx = async (
@@ -127,7 +212,7 @@ export const exportToDocx = async (
   filename: string,
   customBodyHtml?: string
 ): Promise<void> => {
-  // 1. Setup Dual Logos (Kiri & Kanan)
+  // 1. Dual Logos
   let leftLogoRun: Paragraph[] = [];
   let rightLogoRun: Paragraph[] = [];
 
@@ -165,13 +250,13 @@ export const exportToDocx = async (
     }
   }
 
-  // 2. Kop Surat Table with Left Logo, Center Text, Right Logo
+  // 2. Kop Surat Table
   const kopRows = [
     new TableRow({
       children: [
-        // Left Logo Cell (18%)
+        // Left Logo Cell (16%)
         new TableCell({
-          width: { size: 18, type: WidthType.PERCENTAGE },
+          width: { size: 16, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE },
@@ -181,9 +266,9 @@ export const exportToDocx = async (
           children: leftLogoRun.length > 0 ? leftLogoRun : [new Paragraph({ text: '' })],
         }),
 
-        // Center Info Cell (64%)
+        // Center Info Cell (68%)
         new TableCell({
-          width: { size: 64, type: WidthType.PERCENTAGE },
+          width: { size: 68, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE },
@@ -194,27 +279,31 @@ export const exportToDocx = async (
             ...(profile.foundationName ? [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
+                spacing: { after: 20 },
                 children: [
-                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 21, font: 'Times New Roman' }),
                 ],
               })
             ] : []),
             ...(profile.deptName ? profile.deptName.split('\n').map(line => 
               new Paragraph({
                 alignment: AlignmentType.CENTER,
+                spacing: { after: 20 },
                 children: [
-                  new TextRun({ text: line.toUpperCase(), bold: true, size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: line.toUpperCase(), bold: true, size: 21, font: 'Times New Roman' }),
                 ],
               })
             ) : []),
             new Paragraph({
               alignment: AlignmentType.CENTER,
+              spacing: { before: 20, after: 30 },
               children: [
-                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 24, font: 'Times New Roman' }),
+                new TextRun({ text: (profile.schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN').toUpperCase(), bold: true, size: 25, font: 'Times New Roman' }),
               ],
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
+              spacing: { after: 40 },
               children: [
                 new TextRun({ 
                   text: `${profile.address || 'Jln.Raya Soasio-Rum Kel.Tomalou Kec.Tidore Selatan'}${profile.email ? `  E-Maile: ${profile.email}` : ''}`, 
@@ -223,13 +312,12 @@ export const exportToDocx = async (
                 }),
               ],
             }),
-            new Paragraph({ text: '' }),
           ],
         }),
 
-        // Right Logo Cell (18%)
+        // Right Logo Cell (16%)
         new TableCell({
-          width: { size: 18, type: WidthType.PERCENTAGE },
+          width: { size: 16, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE },
@@ -247,189 +335,136 @@ export const exportToDocx = async (
     rows: kopRows,
   });
 
-  // 3. Metadata Section (Nomor, Lampiran, Tanggal)
+  // 3. Body Content
+  let bodyElements: (Paragraph | Table)[] = [];
+
+  if (customBodyHtml) {
+    bodyElements = parseHtmlToDocxElements(customBodyHtml);
+  }
+
+  // 4. Signature Table (Mengetahui & Kepala Sekolah)
   const dateStr = `Tidore, ${formatDateIndo(variables.tanggal_surat || variables.tanggal_sk || variables.tanggal_diterima || new Date().toISOString())}`;
   
-  const metadataRows = [
-    new TableRow({
-      children: [
-        new TableCell({
-          width: { size: 60, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE },
-            bottom: { style: BorderStyle.NONE },
-            left: { style: BorderStyle.NONE },
-            right: { style: BorderStyle.NONE },
-          },
+  const isDisposisi = templateName.toLowerCase().includes('disposisi');
+  const isPernyataan = templateName.toLowerCase().includes('pernyataan');
+
+  let signatureTable: Table | null = null;
+
+  if (!isPernyataan && !isDisposisi) {
+    signatureTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
           children: [
-            new Paragraph({
-              children: [
-                new TextRun({ text: `Nomor     : ${variables.nomor || variables.nomor_agenda || '-'}`, font: 'Times New Roman', size: 22 }),
-              ],
+            new TableCell({
+              width: { size: 55, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE },
+                bottom: { style: BorderStyle.NONE },
+                left: { style: BorderStyle.NONE },
+                right: { style: BorderStyle.NONE },
+              },
+              children: [new Paragraph({ text: '' })],
             }),
-            new Paragraph({
+            new TableCell({
+              width: { size: 45, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE },
+                bottom: { style: BorderStyle.NONE },
+                left: { style: BorderStyle.NONE },
+                right: { style: BorderStyle.NONE },
+              },
               children: [
-                new TextRun({ text: `Lampiran  : ${variables.lampiran || '-'}`, font: 'Times New Roman', size: 22 }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: `Perihal    : `, font: 'Times New Roman', size: 22 }),
-                new TextRun({ text: variables.perihal || templateName, bold: true, font: 'Times New Roman', size: 22 }),
-              ],
-            }),
-          ],
-        }),
-        new TableCell({
-          width: { size: 40, type: WidthType.PERCENTAGE },
-          borders: {
-            top: { style: BorderStyle.NONE },
-            bottom: { style: BorderStyle.NONE },
-            left: { style: BorderStyle.NONE },
-            right: { style: BorderStyle.NONE },
-          },
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.RIGHT,
-              children: [
-                new TextRun({ text: dateStr, font: 'Times New Roman', size: 22 }),
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  spacing: { line: 260 },
+                  children: [
+                    new TextRun({ text: `${dateStr}\n`, font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: profile.principalName || 'Ali Djumati.S.Pd.,M.Si', bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: `\nNIP. ${profile.principalNip || '1977601062003121005'}`, font: 'Times New Roman', size: 22 }),
+                  ],
+                }),
               ],
             }),
           ],
         }),
       ],
-    }),
-  ];
-
-  const metadataTable = new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: metadataRows,
-  });
-
-  // 4. Letter Body Paragraphs
-  let bodyParagraphs: Paragraph[] = [];
-
-  if (customBodyHtml) {
-    bodyParagraphs = parseHtmlToDocxParagraphs(customBodyHtml);
-  }
-
-  // Fallback if parsed HTML paragraphs are empty
-  if (bodyParagraphs.length === 0) {
-    const recipientName = variables.penerima || variables.penerima_tujuan || variables.nama_ortu || '';
-    if (recipientName) {
-      bodyParagraphs.push(
-        new Paragraph({
-          spacing: { before: 240, after: 240 },
-          children: [
-            new TextRun({ text: 'Kepada Yth.\n', font: 'Times New Roman', size: 22 }),
-            new TextRun({ text: `${recipientName}\n`, bold: true, font: 'Times New Roman', size: 22 }),
-            new TextRun({ text: 'di Tempat', font: 'Times New Roman', size: 22 }),
-          ],
-        })
-      );
-    }
-
-    bodyParagraphs.push(
-      new Paragraph({
-        spacing: { after: 120 },
-        children: [new TextRun({ text: 'Dengan hormat,', font: 'Times New Roman', size: 22 })],
-      }),
-      new Paragraph({
-        spacing: { after: 200 },
-        indent: { left: 480 },
-        children: [
-          new TextRun({
-            text: `Surat dinas ini resmi dikeluarkan oleh ${profile.schoolName || 'SMK Negeri 2 Kota Tidore Kepulauan'} terkait perihal "${templateName}". Rincian variabel yang tercatat adalah sebagai berikut:`,
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      })
-    );
-
-    Object.entries(variables).forEach(([k, v]) => {
-      if (k !== 'nomor' && k !== 'tanggal_surat' && k !== 'lampiran') {
-        bodyParagraphs.push(
-          new Paragraph({
-            indent: { left: 720 },
-            children: [
-              new TextRun({ text: `${k.replace(/_/g, ' ').toUpperCase()}: `, bold: true, font: 'Times New Roman', size: 21 }),
-              new TextRun({ text: `${v}`, font: 'Times New Roman', size: 21 }),
-            ],
-          })
-        );
-      }
     });
-
-    bodyParagraphs.push(
-      new Paragraph({
-        spacing: { before: 240, after: 120 },
-        indent: { left: 480 },
-        children: [
-          new TextRun({
-            text: 'Demikian surat ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.',
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      })
-    );
+  } else if (isDisposisi) {
+    signatureTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE },
+                bottom: { style: BorderStyle.NONE },
+                left: { style: BorderStyle.NONE },
+                right: { style: BorderStyle.NONE },
+              },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  spacing: { line: 260 },
+                  children: [
+                    new TextRun({ text: 'Mengetahui / Menerima,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: '( ............................................ )', bold: true, font: 'Times New Roman', size: 22 }),
+                  ],
+                }),
+              ],
+            }),
+            new TableCell({
+              width: { size: 50, type: WidthType.PERCENTAGE },
+              borders: {
+                top: { style: BorderStyle.NONE },
+                bottom: { style: BorderStyle.NONE },
+                left: { style: BorderStyle.NONE },
+                right: { style: BorderStyle.NONE },
+              },
+              children: [
+                new Paragraph({
+                  alignment: AlignmentType.CENTER,
+                  spacing: { line: 260 },
+                  children: [
+                    new TextRun({ text: `${dateStr}\n`, font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: profile.principalName || 'Ali Djumati.S.Pd.,M.Si', bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
+                    new TextRun({ text: `\nNIP. ${profile.principalNip || '1977601062003121005'}`, font: 'Times New Roman', size: 22 }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
   }
 
-  // 5. Signature Section
-  const signatureTable = new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            width: { size: 55, type: WidthType.PERCENTAGE },
-            borders: {
-              top: { style: BorderStyle.NONE },
-              bottom: { style: BorderStyle.NONE },
-              left: { style: BorderStyle.NONE },
-              right: { style: BorderStyle.NONE },
-            },
-            children: [new Paragraph({ text: '' })],
-          }),
-          new TableCell({
-            width: { size: 45, type: WidthType.PERCENTAGE },
-            borders: {
-              top: { style: BorderStyle.NONE },
-              bottom: { style: BorderStyle.NONE },
-              left: { style: BorderStyle.NONE },
-              right: { style: BorderStyle.NONE },
-            },
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [
-                  new TextRun({ text: `Tidore, ${formatDateIndo(variables.tanggal_surat || new Date().toISOString())}\n`, font: 'Times New Roman', size: 22 }),
-                  new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
-                  new TextRun({ text: profile.principalName || 'Ali Djumati.S.Pd.,M.Si', bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
-                  new TextRun({ text: `\nNIP. ${profile.principalNip || '1977601062003121005'}`, font: 'Times New Roman', size: 22 }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-    ],
-  });
-
-  // 6. Build Document
+  // 5. Build Document
   const doc = new Document({
     sections: [
       {
-        properties: {},
+        properties: {
+          page: {
+            margin: {
+              top: 1134, // ~20mm
+              bottom: 1134,
+              left: 1134,
+              right: 1134,
+            },
+          },
+        },
         children: [
           kopTable,
-          new Paragraph({ text: '', spacing: { before: 120 } }),
-          metadataTable,
-          new Paragraph({ text: '', spacing: { before: 120 } }),
-          ...bodyParagraphs,
-          new Paragraph({ text: '', spacing: { before: 360 } }),
-          signatureTable,
+          new Paragraph({ text: '', spacing: { before: 180 } }),
+          ...bodyElements,
+          ...(signatureTable ? [
+            new Paragraph({ text: '', spacing: { before: 240 } }),
+            signatureTable,
+          ] : []),
         ],
       },
     ],
@@ -439,7 +474,7 @@ export const exportToDocx = async (
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${filename || 'Surat_Dinas'}.docx`;
+  a.download = `${filename || 'Dokumen_Surat'}.docx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
