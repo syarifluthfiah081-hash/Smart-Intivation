@@ -60,6 +60,30 @@ body {
 }
 
 /* Aturan Cetak (Print Styles) */
+.editable-box {
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  min-height: 100px;
+}
+
+.editable-active {
+  background-color: rgba(239, 246, 255, 0.5);
+  border: 1.5px dashed #3b82f6 !important;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: text;
+}
+
+.editable-active:hover {
+  background-color: rgba(239, 246, 255, 0.8);
+}
+
+.editable-active:focus {
+  background-color: #ffffff;
+  border: 1.5px solid #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
 @media print {
   body {
     background: white !important;
@@ -73,6 +97,13 @@ body {
 
   .print-only {
     display: block !important;
+  }
+
+  .editable-active {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
   .paper-preview {
@@ -102,3 +133,4 @@ body {
     break-inside: avoid;
   }
 }
+

@@ -12,6 +12,8 @@ import {
 import { db } from './firebase';
 import type { SchoolProfile } from '../components/LetterheadPreview';
 
+import { DEFAULT_SCHOOL_PROFILE } from '../components/LetterheadPreview';
+
 export interface GeneratedLetter {
   id: string;
   typeId: string;
@@ -20,22 +22,11 @@ export interface GeneratedLetter {
   recipientName: string;
   dateCreated: string;
   variables: Record<string, string>;
+  customBodyHtml?: string; // Optional custom edited HTML content
 }
 
-const DEFAULT_PROFILE: SchoolProfile = {
-  schoolName: 'SMA NEGERI 1 MERDEKA',
-  foundationName: '',
-  deptName: 'PEMERINTAH PROVINSI DKI JAKARTA\nDINAS PENDIDIKAN',
-  npsn: '12345678',
-  address: 'Jl. Merdeka Raya No. 10, Gambir, Jakarta Pusat',
-  postalCode: '10110',
-  phone: '(021) 1234567',
-  email: 'info@sman1merdeka.sch.id',
-  website: 'www.sman1merdeka.sch.id',
-  logoUrl: '',
-  principalName: 'Drs. H. Ahmad Wijaya, M.Pd.',
-  principalNip: '197508212003121002',
-};
+const DEFAULT_PROFILE: SchoolProfile = DEFAULT_SCHOOL_PROFILE;
+
 
 // In-memory cache variables
 let cachedProfile: SchoolProfile | null = null;
@@ -84,11 +75,22 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data = docSnap.data() as SchoolProfile;
-      saveLocalProfile(data); // Sync to localStorage
-      return data;
+      const merged = {
+        ...DEFAULT_PROFILE,
+        ...data,
+        logoUrl: data.logoUrl || DEFAULT_PROFILE.logoUrl,
+        logoKananUrl: data.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+      };
+      saveLocalProfile(merged); // Sync to localStorage
+      return merged;
     } else {
       const localData = getLocalProfile();
-      const profileToSave = localData || DEFAULT_PROFILE;
+      const profileToSave = {
+        ...DEFAULT_PROFILE,
+        ...(localData || {}),
+        logoUrl: localData?.logoUrl || DEFAULT_PROFILE.logoUrl,
+        logoKananUrl: localData?.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+      };
       await setDoc(docRef, profileToSave);
       saveLocalProfile(profileToSave);
       return profileToSave;
@@ -99,9 +101,16 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
     return await Promise.race([fetchPromise, timeoutPromise]) as SchoolProfile;
   } catch (error) {
     console.warn('Gagal mengambil profil sekolah dari Firestore, menggunakan data local storage atau default:', error);
-    return getLocalProfile() || DEFAULT_PROFILE;
+    const local = getLocalProfile();
+    return {
+      ...DEFAULT_PROFILE,
+      ...(local || {}),
+      logoUrl: local?.logoUrl || DEFAULT_PROFILE.logoUrl,
+      logoKananUrl: local?.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+    };
   }
 };
+
 
 // Mengambil profil sekolah dari Firestore (dengan proteksi timeout 3 detik, in-memory cache, dan deduplikasi)
 export const getSchoolProfile = async (bypassCache = false): Promise<SchoolProfile> => {
@@ -192,6 +201,7 @@ const fetchLetterHistoryRaw = async (): Promise<GeneratedLetter[]> => {
         recipientName: data.recipientName,
         dateCreated: data.dateCreated,
         variables: data.variables,
+        customBodyHtml: data.customBodyHtml || '',
       });
     });
     return history;
@@ -253,6 +263,7 @@ export const saveLetterHistory = async (history: GeneratedLetter[]): Promise<voi
         recipientName: letter.recipientName,
         dateCreated: letter.dateCreated,
         variables: letter.variables,
+        customBodyHtml: letter.customBodyHtml || '',
       });
     });
     await Promise.all(promises);
@@ -278,6 +289,7 @@ export const addLetterToHistory = async (
       recipientName: letter.recipientName,
       dateCreated,
       variables: letter.variables,
+      customBodyHtml: letter.customBodyHtml || '',
     };
     
     const docRef = await addDoc(lettersCol, docData);
@@ -285,6 +297,7 @@ export const addLetterToHistory = async (
       id: docRef.id,
       ...docData,
     };
+
 
     // Update cache dengan menyematkan surat baru di paling depan (descending)
     if (cachedHistory) {

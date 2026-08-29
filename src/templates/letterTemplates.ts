@@ -35,33 +35,435 @@ export const formatDateIndo = (dateStr: string): string => {
 };
 
 export const letterTemplates: LetterTemplate[] = [
+  // 1. SURAT IZIN GURU
   {
-    id: 'undangan-ortu',
-    name: 'Undangan Orang Tua / Wali Murid',
+    id: 'izin-guru',
+    name: 'Surat Izin Guru / Staf',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.3/024/SMAN1-MRD/VIII/2026', defaultValue: '421.3/024/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '800/015/SMKN2-TIKEP/2026', defaultValue: '800/015/SMKN2-TIKEP/2026' },
+      { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'nama_guru', label: 'Nama Lengkap Guru', type: 'text', placeholder: 'Muhammad Rizal, S.Pd.', defaultValue: 'Muhammad Rizal, S.Pd.' },
+      { key: 'nip_guru', label: 'NIP / NUPTK', type: 'text', placeholder: '198503122010011015', defaultValue: '198503122010011015' },
+      { key: 'pangkat_golongan', label: 'Pangkat / Golongan', type: 'text', placeholder: 'Penata Tk. I, III/d', defaultValue: 'Penata Tk. I, III/d' },
+      { key: 'jabatan_mapel', label: 'Jabatan / Mata Pelajaran', type: 'text', placeholder: 'Guru Teknik Komputer dan Jaringan', defaultValue: 'Guru Teknik Komputer dan Jaringan' },
+      { key: 'alasan_izin', label: 'Alasan Izin / Keperluan', type: 'textarea', placeholder: 'Keperluan keluarga penting / Pemeriksaan kesehatan / Tugas kedinasan...', defaultValue: 'Menghadiri acara keluarga dan pemeriksaan kesehatan berkala yang tidak dapat ditinggalkan.' },
+      { key: 'durasi_izin', label: 'Jangka Waktu / Tanggal Izin', type: 'text', placeholder: '2 (dua) hari, 02 s.d 03 September 2026', defaultValue: '2 (dua) hari, 02 s.d 03 September 2026' },
+      { key: 'tugas_pengganti', label: 'Penyerahan Tugas / Guru Pengganti', type: 'text', placeholder: 'Materi dan modul ajar dititipkan kepada Guru Piket / Bpk. Salim', defaultValue: 'Materi dan lembar tugas mandiri telah dititipkan kepada Guru Piket.' }
+    ],
+    generatePreviewHtml: (vars, profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="text-center mb-5">
+          <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT KETERANGAN IZIN</h4>
+          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
+        </div>
+
+        <div class="mb-3 text-justify">
+          <p class="indent-8">Yang bertanda tangan di bawah ini, Kepala Sekolah <strong>${profile.schoolName}</strong>, dengan ini memberikan izin kepada:</p>
+        </div>
+
+        <div class="mb-4 ml-6">
+          <table class="w-full">
+            <tr><td class="w-40 py-0.5">Nama Lengkap</td><td>: <strong>${vars.nama_guru || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">NIP / NUPTK</td><td>: ${vars.nip_guru || '-'}</td></tr>
+            <tr><td class="py-0.5">Pangkat / Golongan</td><td>: ${vars.pangkat_golongan || '-'}</td></tr>
+            <tr><td class="py-0.5">Jabatan / Mapel</td><td>: ${vars.jabatan_mapel || '-'}</td></tr>
+            <tr><td class="py-0.5">Unit Kerja</td><td>: ${profile.schoolName}</td></tr>
+          </table>
+        </div>
+
+        <div class="mb-4 text-justify">
+          <p>Untuk tidak melaksanakan tugas / izin meninggalkan dinas dengan rincian sebagai berikut:</p>
+          <div class="border border-black p-3 bg-slate-50 mt-1.5 print:bg-transparent">
+            <p><strong>Alasan Izin:</strong><br/>${vars.alasan_izin || '-'}</p>
+            <p class="mt-2"><strong>Waktu / Durasi:</strong> ${vars.durasi_izin || '-'}</p>
+            <p class="mt-1"><strong>Tugas Pembelajaran:</strong> ${vars.tugas_pengganti || '-'}</p>
+          </div>
+        </div>
+
+        <div class="mb-8 text-justify">
+          <p class="indent-8">Demikian surat izin ini diberikan untuk dapat dipergunakan sebagaimana mestinya, dan setelah masa izin selesai yang bersangkutan diwajibkan untuk kembali melaksanakan tugas kedinasan seperti biasa.</p>
+        </div>
+      </div>
+    `
+  },
+
+  // 2. PANGGILAN SISWA
+  {
+    id: 'panggilan-siswa',
+    name: 'Surat Panggilan Orang Tua / Siswa',
+    fields: [
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.5/088/SMKN2-TIKEP/2026', defaultValue: '421.5/088/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
       { key: 'lampiran', label: 'Lampiran', type: 'text', placeholder: '-', defaultValue: '-' },
-      { key: 'perihal', label: 'Perihal', type: 'text', placeholder: 'Undangan Rapat Pleno Wali Murid', defaultValue: 'Undangan Rapat Pleno Wali Murid' },
-      { key: 'penerima', label: 'Penerima Surat', type: 'text', placeholder: 'Bapak/Ibu Orang Tua/Wali Murid', defaultValue: 'Bapak/Ibu Orang Tua/Wali Murid' },
-      { key: 'kelas', label: 'Spesifikasi Kelas (Opsional)', type: 'text', placeholder: 'Kelas X dan XI (Semua Jurusan)', defaultValue: 'Kelas X dan XI (Semua Jurusan)' },
-      { key: 'hari_tanggal', label: 'Hari & Tanggal Acara', type: 'text', placeholder: 'Senin, 17 Agustus 2026', defaultValue: 'Senin, 17 Agustus 2026' },
-      { key: 'waktu', label: 'Waktu Acara', type: 'text', placeholder: '09.00 - 12.00 WIB', defaultValue: '09.00 - 12.00 WIB' },
-      { key: 'tempat', label: 'Tempat Acara', type: 'text', placeholder: 'Aula Pertemuan Utama Sekolah', defaultValue: 'Aula Pertemuan Utama Sekolah' },
-      { key: 'agenda', label: 'Agenda Rapat', type: 'text', placeholder: 'Pembahasan Rencana Program Kerja Semester Ganjil', defaultValue: 'Pembahasan Rencana Program Kerja Semester Ganjil' }
+      { key: 'sifat', label: 'Sifat Surat', type: 'select', options: ['Penting', 'Sangat Penting', 'Biasa'], defaultValue: 'Penting' },
+      { key: 'nama_ortu', label: 'Nama Orang Tua / Wali', type: 'text', placeholder: 'Bapak/Ibu Orang Tua / Wali dari Siswa', defaultValue: 'Bapak/Ibu Orang Tua / Wali dari Siswa' },
+      { key: 'nama_siswa', label: 'Nama Siswa', type: 'text', placeholder: 'Fahri Hidayat', defaultValue: 'Fahri Hidayat' },
+      { key: 'kelas_jurusan', label: 'Kelas / Kompetensi Keahlian', type: 'text', placeholder: 'XI TKJ 1 (Teknik Komputer & Jaringan)', defaultValue: 'XI TKJ 1 (Teknik Komputer & Jaringan)' },
+      { key: 'hari_tanggal', label: 'Hari, Tanggal Panggilan', type: 'text', placeholder: 'Kamis, 04 September 2026', defaultValue: 'Kamis, 04 September 2026' },
+      { key: 'waktu', label: 'Waktu / Pukul', type: 'text', placeholder: '09.00 WIT s.d Selesai', defaultValue: '09.00 WIT s.d Selesai' },
+      { key: 'tempat', label: 'Tempat Panggilan', type: 'text', placeholder: 'Ruang Bimbingan & Konseling (BK) / Kepala Sekolah SMKN 2 Tikep', defaultValue: 'Ruang Bimbingan & Konseling (BK) SMKN 2 Kota Tidore Kepulauan' },
+      { key: 'menemui', label: 'Menemui Siapa', type: 'text', placeholder: 'Guru BP/BK / Wali Kelas / Kepala Sekolah', defaultValue: 'Koordinator BK & Wali Kelas' },
+      { key: 'keperluan', label: 'Maksud / Keperluan', type: 'textarea', placeholder: 'Konsultasi dan pembinaan terkait kedisiplinan dan kehadiran siswa di sekolah...', defaultValue: 'Konsultasi perkembangan belajar serta pembinaan kedisiplinan dan presensi kehadiran siswa di sekolah.' }
     ],
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
         <div class="flex justify-between mb-4">
           <div>
             <table>
-              <tr><td class="w-16">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
-              <tr><td>Lampiran</td><td>: ${vars.lampiran || '-'}</td></tr>
-              <tr><td>Perihal</td><td>: <strong>${vars.perihal || '-'}</strong></td></tr>
+              <tr><td class="w-20 py-0.5">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
+              <tr><td class="py-0.5">Sifat</td><td>: ${vars.sifat || 'Penting'}</td></tr>
+              <tr><td class="py-0.5">Lampiran</td><td>: ${vars.lampiran || '-'}</td></tr>
+              <tr><td class="py-0.5">Perihal</td><td>: <strong>Panggilan Orang Tua / Wali Siswa</strong></td></tr>
             </table>
           </div>
           <div class="text-right">
-            ${profile.address.split(',')[1] || 'Jakarta'}, ${formatDateIndo(vars.tanggal_surat)}
+            Tidore, ${formatDateIndo(vars.tanggal_surat)}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <p>Kepada Yth.<br/>
+          <strong>${vars.nama_ortu || '-'}</strong><br/>
+          Orang Tua / Wali dari: <strong>${vars.nama_siswa || '-'}</strong> (${vars.kelas_jurusan || '-' })<br/>
+          di Tempat</p>
+        </div>
+
+        <div class="mb-4 text-justify">
+          <p>Dengan hormat,</p>
+          <p class="indent-8 mt-1">Sehubungan dengan perlunya koordinasi dan pembinaan terpadu terhadap perkembangan pendidikan putra/putri Bapak/Ibu di <strong>${profile.schoolName}</strong>, maka dengan ini kami mengharap kehadiran Bapak/Ibu pada:</p>
+        </div>
+
+        <div class="mb-4 ml-6">
+          <table class="w-full">
+            <tr><td class="w-36 py-0.5">Hari / Tanggal</td><td>: <strong>${vars.hari_tanggal || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">Waktu</td><td>: ${vars.waktu || '-'}</td></tr>
+            <tr><td class="py-0.5">Tempat</td><td>: ${vars.tempat || '-'}</td></tr>
+            <tr><td class="py-0.5">Menghadap</td><td>: ${vars.menemui || '-'}</td></tr>
+            <tr><td class="py-0.5">Keperluan</td><td>: ${vars.keperluan || '-'}</td></tr>
+          </table>
+        </div>
+
+        <div class="mb-8 text-justify">
+          <p class="indent-8">Mengingat pentingnya agenda pembinaan ini bagi kelancaran proses belajar siswa, kami sangat mengharapkan kehadiran Bapak/Ibu tepat pada waktu yang telah ditentukan tanpa diwakilkan.</p>
+          <p class="mt-2">Demikian surat panggilan ini kami sampaikan, atas perhatian dan kerja sama yang baik diucapkan terima kasih.</p>
+        </div>
+      </div>
+    `
+  },
+
+  // 3. SURAT PERNYATAAN
+  {
+    id: 'surat-pernyataan',
+    name: 'Surat Pernyataan Siswa / Guru',
+    fields: [
+      { key: 'judul_surat', label: 'Judul Dokumen Pernyataan', type: 'text', placeholder: 'SURAT PERNYATAAN TATA TERTIB SISWA', defaultValue: 'SURAT PERNYATAAN SISWA' },
+      { key: 'nomor', label: 'Nomor Registrasi (Opsional)', type: 'text', placeholder: '421.5/092/SMKN2-TIKEP/2026', defaultValue: '421.5/092/SMKN2-TIKEP/2026' },
+      { key: 'tanggal_surat', label: 'Tanggal Pernyataan', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'nama_pihak', label: 'Nama Lengkap Yang Menyatakan', type: 'text', placeholder: 'Fahri Hidayat', defaultValue: 'Fahri Hidayat' },
+      { key: 'identitas_nomor', label: 'NIS / NISN / NIP', type: 'text', placeholder: 'NISN: 0078129033', defaultValue: 'NISN: 0078129033' },
+      { key: 'kelas_posisi', label: 'Kelas / Kompetensi / Jabatan', type: 'text', placeholder: 'Kelas X Teknik Otomotif 2', defaultValue: 'Kelas X Teknik Otomotif 2' },
+      { key: 'alamat_pihak', label: 'Alamat Tinggal', type: 'text', placeholder: 'Kelurahan Tomalou, Tidore Selatan', defaultValue: 'Kelurahan Tomalou, Tidore Selatan' },
+      { key: 'isi_pernyataan', label: 'Poin-Poin Pernyataan', type: 'textarea', placeholder: '1. Sanggup mematuhi tata tertib sekolah...\n2. Tidak mengulangi perbuatan melanggar kedisiplinan...\n3. Siap menerima sanksi apabila melanggar...', defaultValue: '1. Bersedia mematuhi seluruh tata tertib dan peraturan yang berlaku di SMK Negeri 2 Kota Tidore Kepulauan.\n2. Sanggup mengikuti seluruh kegiatan belajar mengajar, praktik kejuruan, dan kegiatan ekstrakurikuler dengan penuh disiplin.\n3. Tidak akan terlibat dalam tawuran, perundungan (bullying), penggunaan obat terlarang/narkoba, maupun tindakan asusila.\n4. Apabila di kemudian hari saya melanggar pernyataan ini, maka saya bersedia menerima sanksi yang ditetapkan sekolah hingga sanksi dikembalikan kepada orang tua.' },
+      { key: 'nama_saksi_ortu', label: 'Nama Orang Tua / Saksi', type: 'text', placeholder: 'Nama Orang Tua / Wali', defaultValue: 'Orang Tua / Wali Siswa' }
+    ],
+    generatePreviewHtml: (vars, profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="text-center mb-5">
+          <h4 class="text-[14px] uppercase font-bold tracking-wider underline">${vars.judul_surat || 'SURAT PERNYATAAN'}</h4>
+          ${vars.nomor ? `<p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor}</p>` : ''}
+        </div>
+
+        <div class="mb-3 text-justify">
+          <p class="indent-8">Yang bertanda tangan di bawah ini:</p>
+        </div>
+
+        <div class="mb-4 ml-6">
+          <table class="w-full">
+            <tr><td class="w-36 py-0.5">Nama Lengkap</td><td>: <strong>${vars.nama_pihak || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">Nomor Identitas</td><td>: ${vars.identitas_nomor || '-'}</td></tr>
+            <tr><td class="py-0.5">Kelas / Jabatan</td><td>: ${vars.kelas_posisi || '-'}</td></tr>
+            <tr><td class="py-0.5">Alamat</td><td>: ${vars.alamat_pihak || '-'}</td></tr>
+            <tr><td class="py-0.5">Sekolah</td><td>: ${profile.schoolName}</td></tr>
+          </table>
+        </div>
+
+        <div class="mb-4 text-justify">
+          <p class="indent-8">Dengan ini menyatakan dengan sebenar-benarnya dan dengan penuh kesadaran tanpa ada paksaan dari pihak mana pun bahwa:</p>
+          <div class="border border-black p-3 bg-slate-50 mt-2 print:bg-transparent whitespace-pre-line text-justify leading-relaxed">
+${vars.isi_pernyataan || '-'}
+          </div>
+        </div>
+
+        <div class="mb-6 text-justify">
+          <p class="indent-8">Demikian surat pernyataan ini saya buat dengan sesungguhnya untuk dapat dipertanggungjawabkan dan dipergunakan sebagaimana mestinya.</p>
+        </div>
+
+        <div class="flex justify-between items-start text-center mt-6 pt-2 avoid-break">
+          <div class="w-[180px]">
+            <p>Mengetahui,<br/>${vars.nama_saksi_ortu || 'Orang Tua / Wali'}</p>
+            <div class="h-[60px]"></div>
+            <p class="font-bold underline">( ............................................ )</p>
+          </div>
+          <div class="w-[200px]">
+            <p>Tidore, ${formatDateIndo(vars.tanggal_surat)}<br/>Yang Membuat Pernyataan,</p>
+            <div class="h-[15px]"></div>
+            <span class="text-[9px] text-slate-400 block no-print">[ Materai Rp 10.000 ]</span>
+            <div class="h-[35px]"></div>
+            <p class="font-bold underline">${vars.nama_pihak || '-'}</p>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // 4. SURAT PERMOHONAN
+  {
+    id: 'surat-permohonan',
+    name: 'Surat Permohonan / Kerjasama / Bantuan',
+    fields: [
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.3/044/SMKN2-TIKEP/2026', defaultValue: '421.3/044/SMKN2-TIKEP/2026' },
+      { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'lampiran', label: 'Lampiran', type: 'text', placeholder: '1 (satu) Berkas Proposal', defaultValue: '1 (satu) Berkas Proposal' },
+      { key: 'perihal', label: 'Perihal Permohonan', type: 'text', placeholder: 'Permohonan Tempat Praktik Kerja Lapangan (PKL) Siswa', defaultValue: 'Permohonan Tempat Praktik Kerja Lapangan (PKL) Siswa' },
+      { key: 'penerima_tujuan', label: 'Penerima Surat (Instansi / DUDI)', type: 'text', placeholder: 'Pimpinan PT / Kantor Telkom Cabang Tidore', defaultValue: 'Pimpinan PT. Telkom Indonesia Wilayah Tidore' },
+      { key: 'alamat_tujuan', label: 'Kota / Lokasi Tujuan', type: 'text', placeholder: 'Kota Tidore Kepulauan', defaultValue: 'Kota Tidore Kepulauan' },
+      { key: 'isi_permohonan', label: 'Isi Ringkasan Permohonan', type: 'textarea', placeholder: 'Dalam rangka meningkatkan kompetensi kejuruan dan menyelaraskan kurikulum SMK dengan dunia industri (DUDI), kami memohon kesediaan...', defaultValue: 'Dalam rangka pelaksanaan program kurikulum vokasi serta membekali peserta didik dengan pengalaman nyata dunia industri (DUDI), kami bermaksud mengajukan permohonan penempatan Praktik Kerja Lapangan (PKL) bagi siswa-siswi SMK Negeri 2 Kota Tidore Kepulauan.' },
+      { key: 'detail_kegiatan', label: 'Rincian Kegiatan / Waktu / Jumlah Siswa', type: 'text', placeholder: 'Jurusan TKJ & Otomotif, Periode: Oktober - Desember 2026 (Jumlah: 6 Siswa)', defaultValue: 'Kompetensi Keahlian TKJ & TBSM, Periode: Oktober s.d Desember 2026 (Jumlah: 8 Siswa)' },
+      { key: 'narahubung', label: 'Narahubung / Kontak Panitia (Hubin)', type: 'text', placeholder: 'Ketua Pokja PKL: 0812-XXXX-XXXX (Bpk. Ahmad)', defaultValue: 'Ketua Pokja PKL / Hubungan Industri (HP/WA: 0812-4455-6677)' }
+    ],
+    generatePreviewHtml: (vars, profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="flex justify-between mb-4">
+          <div>
+            <table>
+              <tr><td class="w-20 py-0.5">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
+              <tr><td class="py-0.5">Lampiran</td><td>: ${vars.lampiran || '-'}</td></tr>
+              <tr><td class="py-0.5">Perihal</td><td>: <strong>${vars.perihal || 'Permohonan'}</strong></td></tr>
+            </table>
+          </div>
+          <div class="text-right">
+            Tidore, ${formatDateIndo(vars.tanggal_surat)}
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <p>Kepada Yth.<br/>
+          <strong>${vars.penerima_tujuan || '-'}</strong><br/>
+          di<br/>
+          ${vars.alamat_tujuan || 'Tempat'}</p>
+        </div>
+
+        <div class="mb-4 text-justify">
+          <p>Dengan hormat,</p>
+          <p class="indent-8 mt-1">${vars.isi_permohonan || '-'}</p>
+        </div>
+
+        <div class="mb-4 ml-6">
+          <table class="w-full">
+            <tr><td class="w-36 py-0.5">Rincian / Waktu</td><td>: <strong>${vars.detail_kegiatan || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">Instansi Pengirim</td><td>: ${profile.schoolName}</td></tr>
+            <tr><td class="py-0.5">Kontak Panitia</td><td>: ${vars.narahubung || '-'}</td></tr>
+          </table>
+        </div>
+
+        <div class="mb-8 text-justify">
+          <p class="indent-8">Besar harapan kami agar Bapak/Ibu dapat berkenan menerima dan menjalin sinergi kemitraan bersama institusi pendidikan kami demi kemajuan vokasi generasi penerus.</p>
+          <p class="mt-2">Demikian surat permohonan ini kami sampaikan. Atas perhatian, perkenan, dan kerja sama yang baik dari Bapak/Ibu, kami ucapkan terima kasih.</p>
+        </div>
+      </div>
+    `
+  },
+
+  // 5. DISPOSISI SURAT
+  {
+    id: 'disposisi-surat',
+    name: 'Lembar Disposisi Surat Kepala Sekolah',
+    fields: [
+      { key: 'nomor_agenda', label: 'Nomor Agenda Surat Masuk', type: 'text', placeholder: 'AGD/2026/089', defaultValue: 'AGD/2026/089' },
+      { key: 'tanggal_diterima', label: 'Tanggal Surat Diterima', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'surat_dari', label: 'Asal Surat (Pengirim)', type: 'text', placeholder: 'Dinas Pendidikan & Kebudayaan Provinsi Maluku Utara', defaultValue: 'Dinas Pendidikan & Kebudayaan Provinsi Maluku Utara' },
+      { key: 'nomor_surat_masuk', label: 'Nomor Surat Masuk', type: 'text', placeholder: '421/782/DISDIKBUD-MU/2026', defaultValue: '421/782/DISDIKBUD-MU/2026' },
+      { key: 'tanggal_surat_masuk', label: 'Tanggal Surat Masuk', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'sifat', label: 'Sifat Dokumen', type: 'select', options: ['Sangat Segera', 'Segera / Penting', 'Rahasia', 'Biasa'], defaultValue: 'Segera / Penting' },
+      { key: 'perihal_isi', label: 'Perihal / Ringkasan Isi Surat', type: 'textarea', placeholder: 'Pelaksanaan Monitoring dan Evaluasi Bantuan Operasional Sekolah (BOS) Tahap II...', defaultValue: 'Pelaksanaan Monitoring dan Evaluasi Bantuan Operasional Sekolah (BOS) Tahap II serta Pemutakhiran Data Sarana Prasarana Vokasi.' },
+      { key: 'diteruskan_kepada', label: 'Diteruskan Kepada (Pejabat/Staf)', type: 'text', placeholder: '1. Wakasek Kurikulum  2. Kepala Tata Usaha  3. Bendahara BOS', defaultValue: '1. Wakasek Kurikulum  2. Kepala Tata Usaha  3. Bendahara BOS' },
+      { key: 'petunjuk_disposisi', label: 'Instruksi / Petunjuk Disposisi', type: 'textarea', placeholder: '[x] Tindak lanjuti segera\n[x] Siapkan laporan dan berkas\n[x] Koordinasikan dengan tim terkait', defaultValue: '[X] Tindak Lanjuti Sesuai Petunjuk Teknis\n[X] Siapkan Data dan Berkas Pendukung\n[X] Koordinasikan dengan Tim Manajemen Terkait\n[X] Laporkan Hasil Pelaksanaan kepada Kepala Sekolah' },
+      { key: 'catatan_kepsek', label: 'Catatan Khusus Kepala Sekolah', type: 'textarea', placeholder: 'Harap diselesaikan paling lambat hari Jumat dan berkas diverifikasi lengkap.', defaultValue: 'Harap diselesaikan tepat waktu, siapkan dokumen SPJ dan rekapitulasi data sarpras sebelum jadwal monev tiba.' }
+    ],
+    generatePreviewHtml: (vars, _profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="text-center mb-4">
+          <h4 class="text-[14px] uppercase font-bold tracking-wider underline">LEMBAR DISPOSISI KEPALA SEKOLAH</h4>
+          <p class="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Agenda Administrasi Persuratan Kedinasan</p>
+        </div>
+
+        {/* Tabel Metadata Surat Masuk */}
+        <table class="w-full border-collapse border border-black mb-4">
+          <tr>
+            <td class="border border-black p-2 font-semibold bg-slate-100 w-1/4 print:bg-transparent">Surat Dari</td>
+            <td class="border border-black p-2 w-1/4">${vars.surat_dari || '-'}</td>
+            <td class="border border-black p-2 font-semibold bg-slate-100 w-1/4 print:bg-transparent">No. Agenda</td>
+            <td class="border border-black p-2 w-1/4 font-mono font-bold">${vars.nomor_agenda || '-'}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-2 font-semibold bg-slate-100 print:bg-transparent">Nomor Surat Masuk</td>
+            <td class="border border-black p-2 font-mono">${vars.nomor_surat_masuk || '-'}</td>
+            <td class="border border-black p-2 font-semibold bg-slate-100 print:bg-transparent">Tanggal Diterima</td>
+            <td class="border border-black p-2">${formatDateIndo(vars.tanggal_diterima)}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-2 font-semibold bg-slate-100 print:bg-transparent">Tanggal Surat</td>
+            <td class="border border-black p-2">${formatDateIndo(vars.tanggal_surat_masuk)}</td>
+            <td class="border border-black p-2 font-semibold bg-slate-100 print:bg-transparent">Sifat Dokumen</td>
+            <td class="border border-black p-2 font-bold uppercase text-red-600 print:text-black">${vars.sifat || 'Penting'}</td>
+          </tr>
+          <tr>
+            <td class="border border-black p-2 font-semibold bg-slate-100 print:bg-transparent">Perihal / Isi Ringkas</td>
+            <td colspan="3" class="border border-black p-2 leading-snug"><strong>${vars.perihal_isi || '-'}</strong></td>
+          </tr>
+        </table>
+
+        {/* Tabel Arahan dan Disposisi */}
+        <table class="w-full border-collapse border border-black mb-4">
+          <thead>
+            <tr class="bg-slate-100 print:bg-transparent">
+              <th class="border border-black p-2 text-left w-1/2">Diteruskan Kepada Sdr. :</th>
+              <th class="border border-black p-2 text-left w-1/2">Petunjuk & Instruksi Kepala Sekolah :</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border border-black p-3 align-top leading-relaxed">
+                <div class="whitespace-pre-line font-medium">${vars.diteruskan_kepada || '-'}</div>
+              </td>
+              <td class="border border-black p-3 align-top leading-relaxed">
+                <div class="whitespace-pre-line font-medium">${vars.petunjuk_disposisi || '-'}</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Catatan Tambahan */}
+        <div class="border border-black p-3 bg-slate-50 print:bg-transparent mb-4">
+          <p class="font-bold text-[11px] uppercase tracking-wider text-slate-700 print:text-black">Catatan Khusus Kepala Sekolah:</p>
+          <p class="mt-1 italic text-justify">${vars.catatan_kepsek || '-'}</p>
+        </div>
+      </div>
+    `
+  },
+
+  // 6. SK (SURAT KEPUTUSAN KEPALA SEKOLAH)
+  {
+    id: 'sk-kepala-sekolah',
+    name: 'SK (Surat Keputusan Kepala Sekolah)',
+    fields: [
+      { key: 'nomor', label: 'Nomor Surat Keputusan', type: 'text', placeholder: '421.3/SK-012/SMKN2-TIKEP/2026', defaultValue: '421.3/SK-012/SMKN2-TIKEP/2026' },
+      { key: 'tanggal_sk', label: 'Tanggal Penetapan SK', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'tentang', label: 'Tentang (Judul Ketetapan SK)', type: 'textarea', placeholder: 'PENETAPAN PEMBAGIAN TUGAS GURU DALAM PROSES BELAJAR MENGAJAR DAN TUGAS TAMBAHAN TAHUN AJARAN 2026/2027', defaultValue: 'PEMBAGIAN TUGAS GURU DALAM PROSES BELAJAR MENGAJAR, BIMBINGAN KONSELING, DAN TUGAS TAMBAHAN LAINNYA DI SMK NEGERI 2 KOTA TIDORE KEPULAUAN TAHUN AJARAN 2026/2027' },
+      { key: 'menimbang', label: 'Menimbang (Konsiderans)', type: 'textarea', placeholder: 'a. Bahwa untuk kelancaran proses kegiatan belajar mengajar...\nb. Bahwa yang namanya tercantum...', defaultValue: 'a. Bahwa dalam rangka kelancaran proses kegiatan belajar mengajar dan pembinaan kesiswaan pada SMK Negeri 2 Kota Tidore Kepulauan, perlu menetapkan pembagian tugas guru dan staf tata usaha;\nb. Bahwa berdasarkan pertimbangan sebagaimana dimaksud pada huruf a, perlu menetapkan Keputusan Kepala SMK Negeri 2 Kota Tidore Kepulauan.' },
+      { key: 'mengingat', label: 'Mengingat (Dasar Hukum)', type: 'textarea', placeholder: '1. Undang-Undang Nomor 20 Tahun 2003...\n2. Peraturan Pemerintah Nomor 19 Tahun 2017...', defaultValue: '1. Undang-Undang Nomor 20 Tahun 2003 tentang Sistem Pendidikan Nasional;\n2. Peraturan Pemerintah Nomor 19 Tahun 2017 tentang Perubahan atas PP No. 74 Tahun 2008 tentang Guru;\n3. Peraturan Menteri Pendidikan, Kebudayaan, Riset, dan Teknologi tentang Standar Nasional Pendidikan Vokasi.' },
+      { key: 'diktum_kesatu', label: 'Diktum KESATU', type: 'textarea', placeholder: 'Menetapkan pembagian tugas mengajar dan tugas tambahan...', defaultValue: 'Menetapkan pembagian tugas guru dalam proses pembelajaran, pembimbingan, dan tugas tambahan lain sebagaimana tercantum dalam lampiran keputusan ini.' },
+      { key: 'diktum_kedua', label: 'Diktum KEDUA', type: 'textarea', placeholder: 'Masing-masing guru bertanggung jawab melaporkan pelaksanaan tugas...', defaultValue: 'Masing-masing guru dan pegawai melaporkan pelaksanaan tugasnya secara tertulis dan berkala kepada Kepala Sekolah.' },
+      { key: 'diktum_ketiga', label: 'Diktum KETIGA', type: 'textarea', placeholder: 'Segala biaya yang timbul dibebankan pada anggaran yang sesuai...', defaultValue: 'Segala biaya yang timbul akibat pelaksanaan keputusan ini dibebankan pada Anggaran Pendapatan dan Belanja Sekolah (BOS/BOP) yang relevan.' },
+      { key: 'diktum_keempat', label: 'Diktum KEEMPAT', type: 'textarea', placeholder: 'Keputusan ini berlaku sejak tanggal ditetapkan...', defaultValue: 'Keputusan ini berlaku sejak tanggal ditetapkan dengan ketentuan apabila terdapat kekeliruan akan diperbaiki sebagaimana mestinya.' }
+    ],
+    generatePreviewHtml: (vars, profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="text-center mb-4">
+          <h4 class="text-[13px] uppercase font-bold tracking-wider">KEPUTUSAN KEPALA ${profile.schoolName}</h4>
+          <p class="text-[11px] font-bold">NOMOR : ${vars.nomor || '-'}</p>
+          <p class="text-[12px] font-bold uppercase mt-2">TENTANG</p>
+          <p class="text-[12px] font-bold uppercase max-w-lg mx-auto leading-snug">${vars.tentang || '-'}</p>
+          <p class="text-[12px] font-bold uppercase mt-2">DENGAN RAHMAT TUHAN YANG MAHA ESA<br/>KEPALA ${profile.schoolName}</p>
+        </div>
+
+        <div class="space-y-3 mb-4 text-justify">
+          <table class="w-full">
+            <tr class="align-top">
+              <td class="w-24 font-bold">Menimbang</td>
+              <td class="w-4">:</td>
+              <td class="whitespace-pre-line leading-relaxed">${vars.menimbang || '-'}</td>
+            </tr>
+            <tr class="align-top">
+              <td class="font-bold pt-2">Mengingat</td>
+              <td class="pt-2">:</td>
+              <td class="pt-2 whitespace-pre-line leading-relaxed">${vars.mengingat || '-'}</td>
+            </tr>
+          </table>
+
+          <div class="text-center my-3 font-bold uppercase tracking-wider">
+            MEMUTUSKAN:
+          </div>
+
+          <table class="w-full">
+            <tr class="align-top">
+              <td class="w-24 font-bold">Menetapkan</td>
+              <td class="w-4">:</td>
+              <td class="font-bold uppercase">${vars.tentang || '-'}</td>
+            </tr>
+            <tr class="align-top">
+              <td class="font-bold pt-2">KESATU</td>
+              <td class="pt-2">:</td>
+              <td class="pt-2 leading-relaxed">${vars.diktum_kesatu || '-'}</td>
+            </tr>
+            <tr class="align-top">
+              <td class="font-bold pt-2">KEDUA</td>
+              <td class="pt-2">:</td>
+              <td class="pt-2 leading-relaxed">${vars.diktum_kedua || '-'}</td>
+            </tr>
+            <tr class="align-top">
+              <td class="font-bold pt-2">KETIGA</td>
+              <td class="pt-2">:</td>
+              <td class="pt-2 leading-relaxed">${vars.diktum_ketiga || '-'}</td>
+            </tr>
+            <tr class="align-top">
+              <td class="font-bold pt-2">KEEMPAT</td>
+              <td class="pt-2">:</td>
+              <td class="pt-2 leading-relaxed">${vars.diktum_keempat || '-'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="mb-4 text-justify">
+          <div class="flex justify-end">
+            <div class="text-left">
+              <p>Ditetapkan di : Tidore</p>
+              <p>Pada tanggal : ${formatDateIndo(vars.tanggal_sk)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  },
+
+  // 7. UNDANGAN ORANG TUA / WALI MURID
+  {
+    id: 'undangan-ortu',
+    name: 'Undangan Orang Tua / Wali Murid',
+    fields: [
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.3/024/SMKN2-TIKEP/2026', defaultValue: '421.3/024/SMKN2-TIKEP/2026' },
+      { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
+      { key: 'lampiran', label: 'Lampiran', type: 'text', placeholder: '-', defaultValue: '-' },
+      { key: 'perihal', label: 'Perihal', type: 'text', placeholder: 'Undangan Rapat Pleno Komite & Wali Murid', defaultValue: 'Undangan Rapat Pleno Komite & Wali Murid' },
+      { key: 'penerima', label: 'Penerima Surat', type: 'text', placeholder: 'Bapak/Ibu Orang Tua/Wali Murid Siswa', defaultValue: 'Bapak/Ibu Orang Tua/Wali Murid Kelas X, XI & XII' },
+      { key: 'kelas', label: 'Spesifikasi Kelas / Jurusan', type: 'text', placeholder: 'Semua Kompetensi Keahlian SMKN 2 Tidore Kepulauan', defaultValue: 'Semua Kompetensi Keahlian SMKN 2 Tidore Kepulauan' },
+      { key: 'hari_tanggal', label: 'Hari & Tanggal Acara', type: 'text', placeholder: 'Senin, 07 September 2026', defaultValue: 'Senin, 07 September 2026' },
+      { key: 'waktu', label: 'Waktu Acara', type: 'text', placeholder: '09.00 - 12.00 WIT', defaultValue: '09.00 - 12.00 WIT' },
+      { key: 'tempat', label: 'Tempat Acara', type: 'text', placeholder: 'Aula Pertemuan Utama SMK Negeri 2 Kota Tidore Kepulauan', defaultValue: 'Aula Pertemuan Utama SMK Negeri 2 Kota Tidore Kepulauan' },
+      { key: 'agenda', label: 'Agenda Rapat', type: 'text', placeholder: 'Pembahasan Program Pembelajaran Praktik & PKL Tahun Ajaran Baru', defaultValue: 'Pembahasan Program Pembelajaran Praktik Kejuruan, PKL DUDI, dan Penguatan Sarana Vokasi' }
+    ],
+    generatePreviewHtml: (vars, _profile) => `
+      <div class="font-serif text-black text-[12px] leading-relaxed">
+        <div class="flex justify-between mb-4">
+          <div>
+            <table>
+              <tr><td class="w-16 py-0.5">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
+              <tr><td class="py-0.5">Lampiran</td><td>: ${vars.lampiran || '-'}</td></tr>
+              <tr><td class="py-0.5">Perihal</td><td>: <strong>${vars.perihal || '-'}</strong></td></tr>
+            </table>
+          </div>
+          <div class="text-right">
+            Tidore, ${formatDateIndo(vars.tanggal_surat)}
           </div>
         </div>
 
@@ -74,154 +476,160 @@ export const letterTemplates: LetterTemplate[] = [
 
         <div class="mb-4 text-justify">
           <p>Dengan hormat,</p>
-          <p class="indent-8 mt-1">Sehubungan dengan dimulainya tahun ajaran baru serta penyusunan program pembelajaran dan anggaran sekolah, kami bermaksud mengundang Bapak/Ibu Orang Tua/Wali Murid untuk menghadiri Rapat Pertemuan Wali Murid yang akan diselenggarakan pada:</p>
+          <p class="indent-8 mt-1">Sehubungan dengan agenda kerja sekolah serta penyelarasan program pendidikan vokasi tahun ajaran baru, kami bermaksud mengundang Bapak/Ibu Orang Tua/Wali Murid untuk menghadiri Rapat Pertemuan yang akan diselenggarakan pada:</p>
         </div>
 
-        <div class="mb-4 ml-8">
+        <div class="mb-4 ml-6">
           <table class="w-full">
-            <tr><td class="w-32">Hari, Tanggal</td><td>: ${vars.hari_tanggal || '-'}</td></tr>
-            <tr><td>Waktu</td><td>: ${vars.waktu || '-'}</td></tr>
-            <tr><td>Tempat</td><td>: ${vars.tempat || '-'}</td></tr>
-            <tr><td>Agenda</td><td>: ${vars.agenda || '-'}</td></tr>
+            <tr><td class="w-32 py-0.5">Hari, Tanggal</td><td>: ${vars.hari_tanggal || '-'}</td></tr>
+            <tr><td class="py-0.5">Waktu</td><td>: ${vars.waktu || '-'}</td></tr>
+            <tr><td class="py-0.5">Tempat</td><td>: ${vars.tempat || '-'}</td></tr>
+            <tr><td class="py-0.5">Agenda</td><td>: ${vars.agenda || '-'}</td></tr>
           </table>
         </div>
 
         <div class="mb-8 text-justify">
-          <p class="indent-8">Mengingat pentingnya agenda rapat ini guna menyelaraskan program pendidikan anak-anak kita, kehadiran Bapak/Ibu sangat kami harapkan. Jika berhalangan hadir, mohon dapat mewakilkan dengan membawa surat kuasa.</p>
+          <p class="indent-8">Mengingat pentingnya agenda rapat ini guna menyukseskan program pendidikan dan kesiapan keahlian anak-anak kita, kehadiran Bapak/Ibu sangat kami harapkan tepat pada waktunya.</p>
           <p class="mt-2">Demikian undangan ini kami sampaikan. Atas perhatian, kehadiran, dan kerja sama yang baik, kami ucapkan terima kasih.</p>
         </div>
       </div>
     `
   },
+
+  // 8. SURAT TUGAS GURU / STAF
   {
     id: 'surat-tugas',
     name: 'Surat Tugas Guru / Staf',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '800/112/SMAN1-MRD/VIII/2026', defaultValue: '800/112/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '800/112/SMKN2-TIKEP/2026', defaultValue: '800/112/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'nama_petugas', label: 'Nama Penerima Tugas', type: 'text', placeholder: 'Budi Santoso, S.Pd.', defaultValue: 'Budi Santoso, S.Pd.' },
-      { key: 'nip_petugas', label: 'NIP/NUPTK Penerima Tugas', type: 'text', placeholder: '19820415 200904 1 003', defaultValue: '19820415 200904 1 003' },
-      { key: 'pangkat_golongan', label: 'Pangkat / Golongan', type: 'text', placeholder: 'Penata Muda, III/a', defaultValue: 'Penata Muda, III/a' },
-      { key: 'jabatan', label: 'Jabatan Struktural', type: 'text', placeholder: 'Guru Madya / Wali Kelas XI', defaultValue: 'Guru Madya / Wali Kelas XI' },
-      { key: 'deskripsi_tugas', label: 'Tugas Yang Diberikan', type: 'textarea', placeholder: 'Mengikuti Bimbingan Teknis Implementasi Kurikulum Merdeka yang diselenggarakan oleh Dinas Pendidikan...', defaultValue: 'Mengikuti Bimbingan Teknis Implementasi Kurikulum Merdeka yang diselenggarakan oleh Dinas Pendidikan Daerah.' },
-      { key: 'waktu_tugas', label: 'Waktu Pelaksanaan', type: 'text', placeholder: '18 s.d 20 Agustus 2026', defaultValue: '18 s.d 20 Agustus 2026' },
-      { key: 'tempat_tugas', label: 'Tempat Pelaksanaan', type: 'text', placeholder: 'LPMP Provinsi DKI Jakarta', defaultValue: 'LPMP Provinsi DKI Jakarta' }
+      { key: 'nama_petugas', label: 'Nama Penerima Tugas', type: 'text', placeholder: 'Rustam Ismail, S.Kom.', defaultValue: 'Rustam Ismail, S.Kom.' },
+      { key: 'nip_petugas', label: 'NIP/NUPTK Penerima Tugas', type: 'text', placeholder: '198406122009031002', defaultValue: '198406122009031002' },
+      { key: 'pangkat_golongan', label: 'Pangkat / Golongan', type: 'text', placeholder: 'Penata Muda Tk. I, III/b', defaultValue: 'Penata Muda Tk. I, III/b' },
+      { key: 'jabatan', label: 'Jabatan Struktural', type: 'text', placeholder: 'Ketua Program Keahlian TJKT', defaultValue: 'Ketua Program Keahlian TJKT' },
+      { key: 'deskripsi_tugas', label: 'Tugas Yang Diberikan', type: 'textarea', placeholder: 'Mengikuti Workshop Peningkatan Kompetensi Guru Kejuruan Berbasis Industri yang diselenggarakan oleh Dinas Pendidikan...', defaultValue: 'Mengikuti Workshop Pelatihan Sinkronisasi Kurikulum Vokasi Berbasis Industri dan Uji Sertifikasi Kompetensi Kejuruan.' },
+      { key: 'waktu_tugas', label: 'Waktu Pelaksanaan', type: 'text', placeholder: '08 s.d 10 September 2026', defaultValue: '08 s.d 10 September 2026' },
+      { key: 'tempat_tugas', label: 'Tempat Pelaksanaan', type: 'text', placeholder: 'Hotel Grand Dafam Bela Ternate / LPMP Maluku Utara', defaultValue: 'Balai Penjaminan Mutu Pendidikan (BPMP) Provinsi Maluku Utara' }
     ],
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
-        <div class="text-center mb-6">
+        <div class="text-center mb-5">
           <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT TUGAS</h4>
-          <p class="text-[11px] leading-none">Nomor: ${vars.nomor || '-'}</p>
+          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
         </div>
 
-        <div class="mb-4 text-justify">
-          <p class="indent-8">Yang bertanda tangan di bawah ini, Kepala Sekolah <strong>${profile.schoolName}</strong>, dengan ini memberikan tugas kepada:</p>
+        <div class="mb-3 text-justify">
+          <p class="indent-8">Yang bertanda tangan di bawah ini, Kepala Sekolah <strong>${profile.schoolName}</strong>, dengan ini menugaskan kepada:</p>
         </div>
 
-        <div class="mb-4 ml-8">
+        <div class="mb-4 ml-6">
           <table class="w-full">
-            <tr><td class="w-36">Nama Lengkap</td><td>: <strong>${vars.nama_petugas || '-'}</strong></td></tr>
-            <tr><td>NIP / NUPTK</td><td>: ${vars.nip_petugas || '-'}</td></tr>
-            <tr><td>Pangkat / Golongan</td><td>: ${vars.pangkat_golongan || '-'}</td></tr>
-            <tr><td>Jabatan</td><td>: ${vars.jabatan || '-'}</td></tr>
+            <tr><td class="w-36 py-0.5">Nama Lengkap</td><td>: <strong>${vars.nama_petugas || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">NIP / NUPTK</td><td>: ${vars.nip_petugas || '-'}</td></tr>
+            <tr><td class="py-0.5">Pangkat / Golongan</td><td>: ${vars.pangkat_golongan || '-'}</td></tr>
+            <tr><td class="py-0.5">Jabatan</td><td>: ${vars.jabatan || '-'}</td></tr>
           </table>
         </div>
 
         <div class="mb-4 text-justify">
-          <p>Untuk melaksanakan tugas sebagai berikut:</p>
-          <div class="border border-black p-3 bg-slate-50 mt-1 print:bg-transparent">
-            <strong>Deskripsi Tugas:</strong><br/>
+          <p>Untuk melaksanakan tugas kedinasan sebagai berikut:</p>
+          <div class="border border-black p-3 bg-slate-50 mt-1.5 print:bg-transparent">
+            <strong>Deskripsi Penugasan:</strong><br/>
             ${vars.deskripsi_tugas || '-'}
           </div>
         </div>
 
-        <div class="mb-4 ml-8">
+        <div class="mb-4 ml-6">
           <table class="w-full">
-            <tr><td class="w-36">Waktu Pelaksanaan</td><td>: ${vars.waktu_tugas || '-'}</td></tr>
-            <tr><td>Tempat Pelaksanaan</td><td>: ${vars.tempat_tugas || '-'}</td></tr>
+            <tr><td class="w-36 py-0.5">Waktu Pelaksanaan</td><td>: ${vars.waktu_tugas || '-'}</td></tr>
+            <tr><td class="py-0.5">Tempat Pelaksanaan</td><td>: ${vars.tempat_tugas || '-'}</td></tr>
           </table>
         </div>
 
         <div class="mb-8 text-justify">
-          <p class="indent-8">Demikian Surat Tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab, dan setelah menyelesaikan tugas tersebut agar membuat laporan tertulis kepada Kepala Sekolah.</p>
+          <p class="indent-8">Demikian Surat Tugas ini dibuat untuk dilaksanakan dengan sebaik-baiknya dan penuh rasa tanggung jawab, serta menyampaikan laporan hasil pelaksanaan tugas setelah kegiatan selesai.</p>
         </div>
       </div>
     `
   },
+
+  // 9. SKL (SURAT KETERANGAN LULUS)
   {
     id: 'skl',
     name: 'Surat Keterangan Lulus (SKL)',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '422.1/312/SMAN1-MRD/VIII/2026', defaultValue: '422.1/312/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '422.1/312/SMKN2-TIKEP/2026', defaultValue: '422.1/312/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'nama_siswa', label: 'Nama Lengkap Siswa', type: 'text', placeholder: 'Rian Hidayat', defaultValue: 'Rian Hidayat' },
-      { key: 'tempat_lahir', label: 'Tempat Lahir', type: 'text', placeholder: 'Jakarta', defaultValue: 'Jakarta' },
-      { key: 'tanggal_lahir', label: 'Tanggal Lahir', type: 'date', defaultValue: '2008-05-12' },
+      { key: 'nama_siswa', label: 'Nama Lengkap Siswa', type: 'text', placeholder: 'Achmad Fauzan', defaultValue: 'Achmad Fauzan' },
+      { key: 'tempat_lahir', label: 'Tempat Lahir', type: 'text', placeholder: 'Tidore', defaultValue: 'Tidore' },
+      { key: 'tanggal_lahir', label: 'Tanggal Lahir', type: 'date', defaultValue: '2008-06-15' },
       { key: 'nis_nisn', label: 'NIS / NISN', type: 'text', placeholder: '20812 / 0081234567', defaultValue: '20812 / 0081234567' },
-      { key: 'nomor_peserta', label: 'Nomor Ujian Peserta', type: 'text', placeholder: 'U-SMAN1-098', defaultValue: 'U-SMAN1-098' },
-      { key: 'program_keahlian', label: 'Program / Jurusan', type: 'text', placeholder: 'MIPA (Matematika & Ilmu Pengetahuan Alam)', defaultValue: 'MIPA (Matematika & Ilmu Pengetahuan Alam)' },
+      { key: 'nomor_peserta', label: 'Nomor Ujian Peserta', type: 'text', placeholder: 'U-SMKN2-098', defaultValue: 'U-SMKN2-098' },
+      { key: 'program_keahlian', label: 'Program / Kompetensi Keahlian', type: 'text', placeholder: 'Teknik Komputer dan Jaringan (TKJ)', defaultValue: 'Teknik Komputer dan Jaringan (TKJ)' },
       { key: 'status_kelulusan', label: 'Status Kelulusan', type: 'select', options: ['LULUS', 'TIDAK LULUS'], defaultValue: 'LULUS' },
-      { key: 'nilai_rata_rata', label: 'Nilai Rata-rata Ujian Sekolah', type: 'text', placeholder: '87.56', defaultValue: '87.56' }
+      { key: 'nilai_rata_rata', label: 'Nilai Rata-rata Ujian Sekolah & UKK', type: 'text', placeholder: '88.75', defaultValue: '88.75' }
     ],
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
         <div class="text-center mb-4">
           <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT KETERANGAN LULUS</h4>
-          <p class="text-[11px] leading-none">Nomor: ${vars.nomor || '-'}</p>
+          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
         </div>
 
         <div class="mb-3 text-justify">
           <p class="indent-8">Yang bertanda tangan di bawah ini, Kepala Sekolah <strong>${profile.schoolName}</strong> menerangkan bahwa:</p>
         </div>
 
-        <div class="mb-3 ml-8">
+        <div class="mb-3 ml-6">
           <table class="w-full">
-            <tr><td class="w-40">Nama Siswa</td><td>: <strong>${vars.nama_siswa || '-'}</strong></td></tr>
-            <tr><td>Tempat, Tanggal Lahir</td><td>: ${vars.tempat_lahir || '-'}, ${formatDateIndo(vars.tanggal_lahir)}</td></tr>
-            <tr><td>NIS / NISN</td><td>: ${vars.nis_nisn || '-'}</td></tr>
-            <tr><td>Nomor Ujian Peserta</td><td>: ${vars.nomor_peserta || '-'}</td></tr>
-            <tr><td>Program Studi / Jurusan</td><td>: ${vars.program_keahlian || '-'}</td></tr>
+            <tr><td class="w-40 py-0.5">Nama Siswa</td><td>: <strong>${vars.nama_siswa || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">Tempat, Tanggal Lahir</td><td>: ${vars.tempat_lahir || '-'}, ${formatDateIndo(vars.tanggal_lahir)}</td></tr>
+            <tr><td class="py-0.5">NIS / NISN</td><td>: ${vars.nis_nisn || '-'}</td></tr>
+            <tr><td class="py-0.5">Nomor Ujian Peserta</td><td>: ${vars.nomor_peserta || '-'}</td></tr>
+            <tr><td class="py-0.5">Kompetensi Keahlian</td><td>: ${vars.program_keahlian || '-'}</td></tr>
           </table>
         </div>
 
         <div class="mb-4 text-justify">
-          <p class="indent-8 text-justify">Berdasarkan hasil Kriteria Kelulusan Satuan Pendidikan yang mengacu pada Peraturan Menteri Pendidikan, Kebudayaan, Riset, dan Teknologi, serta melalui Rapat Dewan Guru mengenai Penetapan Kelulusan Tahun Ajaran, siswa yang bersangkutan dinyatakan:</p>
+          <p class="indent-8 text-justify">Berdasarkan kriteria kelulusan satuan pendidikan yang mengacu pada Peraturan Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi serta hasil Rapat Dewan Pendidik, siswa yang bersangkutan dinyatakan:</p>
           
           <div class="text-center my-4">
-            <span class="inline-block border-2 border-black px-6 py-2 text-[16px] font-extrabold uppercase bg-slate-100 tracking-widest print:bg-transparent">
+            <span class="inline-block border-2 border-black px-6 py-2 text-[15px] font-extrabold uppercase bg-slate-100 tracking-widest print:bg-transparent">
               ${vars.status_kelulusan || 'LULUS'}
             </span>
           </div>
 
-          <p class="indent-8">dengan Nilai Rata-rata Ujian Sekolah: <strong>${vars.nilai_rata_rata || '0.00'}</strong>.</p>
-          <p class="mt-2 indent-8">Surat keterangan ini berlaku sementara sampai dengan diterbitkannya Ijazah asli siswa yang bersangkutan oleh Kementerian Pendidikan terkait. Harap dokumen ini digunakan sebagaimana mestinya.</p>
+          <p class="indent-8">dengan Nilai Rata-rata Ujian Sekolah & UKK: <strong>${vars.nilai_rata_rata || '0.00'}</strong>.</p>
+          <p class="mt-2 indent-8">Surat keterangan kelulusan ini bersifat sementara dan berlaku sah sampai dengan diterbitkannya Ijazah asli. Demikian untuk dipergunakan sebagaimana mestinya.</p>
         </div>
       </div>
     `
   },
+
+  // 10. SURAT PENGANTAR UMUM
   {
     id: 'surat-pengantar',
     name: 'Surat Pengantar Umum',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '045.2/089/SMAN1-MRD/VIII/2026', defaultValue: '045.2/089/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '045.2/089/SMKN2-TIKEP/2026', defaultValue: '045.2/089/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'penerima', label: 'Penerima Pengantar', type: 'text', placeholder: 'Kepala Kantor Cabang Dinas Pendidikan Wilayah I', defaultValue: 'Kepala Kantor Cabang Dinas Pendidikan Wilayah I' },
-      { key: 'nama_berkas', label: 'Jenis Berkas yang Dikirim', type: 'textarea', placeholder: 'Proposal Permohonan Bantuan Renovasi Laboratorium Komputer SMAN 1 Merdeka Tahun Anggaran 2027.', defaultValue: 'Proposal Permohonan Bantuan Renovasi Laboratorium Komputer SMAN 1 Merdeka.' },
+      { key: 'penerima', label: 'Penerima Pengantar', type: 'text', placeholder: 'Kepala Kantor Cabang Dinas Pendidikan Provinsi Maluku Utara di Tidore', defaultValue: 'Kepala Kantor Cabang Dinas Pendidikan Kota Tidore Kepulauan' },
+      { key: 'nama_berkas', label: 'Jenis Berkas yang Dikirim', type: 'textarea', placeholder: 'Laporan Realisasi Program Bantuan Revitalisasi SMK dan Data Sarpras Praktik Kejuruan.', defaultValue: 'Laporan Realisasi Program Revitalisasi Vokasi dan Usulan Bantuan Alat Praktik SMKN 2 Tidore Kepulauan.' },
       { key: 'jumlah_berkas', label: 'Jumlah / Banyaknya', type: 'text', placeholder: '1 (satu) Berkas Lengkap', defaultValue: '1 (satu) Berkas Lengkap' },
-      { key: 'keterangan_berkas', label: 'Keterangan', type: 'text', placeholder: 'Dikirim dengan hormat untuk menjadi periksa dan pertimbangan.', defaultValue: 'Dikirim dengan hormat untuk menjadi periksa dan pertimbangan.' }
+      { key: 'keterangan_berkas', label: 'Keterangan', type: 'text', placeholder: 'Disampaikan dengan hormat untuk periksa dan tindak lanjut.', defaultValue: 'Disampaikan dengan hormat untuk menjadi periksa dan pertimbangan lebih lanjut.' }
     ],
-    generatePreviewHtml: (vars, profile) => `
+    generatePreviewHtml: (vars, _profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
         <div class="flex justify-between mb-4">
           <div>
             <table>
-              <tr><td class="w-16">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
-              <tr><td>Lampiran</td><td>: 1 Berkas</td></tr>
-              <tr><td>Perihal</td><td>: Surat Pengantar</td></tr>
+              <tr><td class="w-16 py-0.5">Nomor</td><td>: ${vars.nomor || '-'}</td></tr>
+              <tr><td class="py-0.5">Lampiran</td><td>: 1 Berkas</td></tr>
+              <tr><td class="py-0.5">Perihal</td><td>: Surat Pengantar</td></tr>
             </table>
           </div>
           <div class="text-right">
-            ${profile.address.split(',')[1] || 'Jakarta'}, ${formatDateIndo(vars.tanggal_surat)}
+            Tidore, ${formatDateIndo(vars.tanggal_surat)}
           </div>
         </div>
 
@@ -232,7 +640,7 @@ export const letterTemplates: LetterTemplate[] = [
         </div>
 
         <div class="mb-4 text-justify">
-          <p class="indent-8">Bersama ini kami kirimkan dokumen/berkas kelengkapan administrasi instansi dengan rincian tabel di bawah ini:</p>
+          <p class="indent-8">Bersama ini kami kirimkan berkas administrasi instansi sebagaimana tercantum pada tabel di bawah ini:</p>
         </div>
 
         <div class="mb-4">
@@ -257,39 +665,41 @@ export const letterTemplates: LetterTemplate[] = [
         </div>
 
         <div class="mb-8 text-justify">
-          <p class="indent-8">Demikian surat pengantar ini dibuat, atas perhatian dan kerja sama yang baik dari Bapak/Ibu kami mengucapkan terima kasih banyak.</p>
+          <p class="indent-8">Demikian surat pengantar ini kami sampaikan, atas perhatian dan penerimaan yang baik dari Bapak/Ibu kami ucapkan terima kasih.</p>
         </div>
       </div>
     `
   },
+
+  // 11. SURAT REKOMENDASI
   {
     id: 'rekomendasi',
     name: 'Surat Rekomendasi',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.4/098/SMAN1-MRD/VIII/2026', defaultValue: '421.4/098/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '421.4/098/SMKN2-TIKEP/2026', defaultValue: '421.4/098/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'nama_rekomendasi', label: 'Nama Yang Direkomendasikan', type: 'text', placeholder: 'Ahmad Faisal', defaultValue: 'Ahmad Faisal' },
-      { key: 'id_rekomendasi', label: 'NISN / NIP / NIK', type: 'text', placeholder: 'NISN: 0098765432', defaultValue: 'NISN: 0098765432' },
-      { key: 'instansi_jabatan', label: 'Kelas / Posisi', type: 'text', placeholder: 'Kelas XII MIPA 2', defaultValue: 'Kelas XII MIPA 2' },
-      { key: 'tujuan_rekomendasi', label: 'Keperluan / Tujuan', type: 'text', placeholder: 'Mengikuti program Pertukaran Pelajar Nasional Berprestasi.', defaultValue: 'Mengikuti program Pertukaran Pelajar Nasional Berprestasi.' },
-      { key: 'isi_rekomendasi', label: 'Alasan Rekomendasi', type: 'textarea', placeholder: 'Siswa yang bersangkutan memiliki catatan prestasi akademik yang luar biasa, berkarakter baik, jujur, serta aktif berorganisasi dalam OSIS...', defaultValue: 'Siswa yang bersangkutan merupakan siswa berprestasi di sekolah kami, selalu menjaga etika moral, dan aktif berorganisasi. Kami memberikan dukungan penuh atas keikutsertaannya dalam kegiatan tersebut.' }
+      { key: 'nama_rekomendasi', label: 'Nama Yang Direkomendasikan', type: 'text', placeholder: 'Fitriani Taher', defaultValue: 'Fitriani Taher' },
+      { key: 'id_rekomendasi', label: 'NISN / NIP / NIK', type: 'text', placeholder: 'NISN: 0087654321', defaultValue: 'NISN: 0087654321' },
+      { key: 'instansi_jabatan', label: 'Kelas / Posisi', type: 'text', placeholder: 'Kelas XII Teknik Komputer Jaringan', defaultValue: 'Kelas XII Teknik Komputer Jaringan' },
+      { key: 'tujuan_rekomendasi', label: 'Keperluan / Tujuan Rekomendasi', type: 'text', placeholder: 'Mengikuti Seleksi Beasiswa Pendidikan Vokasi Unggulan & Lomba Kompetensi Siswa (LKS)', defaultValue: 'Mengikuti Seleksi Beasiswa Prestasi Pendidikan Vokasi Unggulan Nasional' },
+      { key: 'isi_rekomendasi', label: 'Alasan Rekomendasi', type: 'textarea', placeholder: 'Siswa yang bersangkutan memiliki catatan prestasi akademik dan kejuruan yang luar biasa...', defaultValue: 'Siswa yang bersangkutan merupakan peserta didik berprestasi di sekolah kami, berkarakter jujur, santun, serta memiliki keahlian teknis yang sangat kompeten. Kami memberikan rekomendasi dan dukungan penuh atas keikutsertaannya.' }
     ],
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
-        <div class="text-center mb-6">
+        <div class="text-center mb-5">
           <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT REKOMENDASI</h4>
-          <p class="text-[11px] leading-none">Nomor: ${vars.nomor || '-'}</p>
+          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
         </div>
 
-        <div class="mb-4 text-justify">
+        <div class="mb-3 text-justify">
           <p class="indent-8">Yang bertanda tangan di bawah ini, Kepala Sekolah <strong>${profile.schoolName}</strong> dengan ini memberikan rekomendasi kepada:</p>
         </div>
 
-        <div class="mb-4 ml-8">
+        <div class="mb-4 ml-6">
           <table class="w-full">
-            <tr><td class="w-36">Nama Lengkap</td><td>: <strong>${vars.nama_rekomendasi || '-'}</strong></td></tr>
-            <tr><td>NISN / NIP / NIK</td><td>: ${vars.id_rekomendasi || '-'}</td></tr>
-            <tr><td>Kelas / Posisi</td><td>: ${vars.instansi_jabatan || '-'}</td></tr>
+            <tr><td class="w-36 py-0.5">Nama Lengkap</td><td>: <strong>${vars.nama_rekomendasi || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">NISN / NIP</td><td>: ${vars.id_rekomendasi || '-'}</td></tr>
+            <tr><td class="py-0.5">Kelas / Jurusan</td><td>: ${vars.instansi_jabatan || '-'}</td></tr>
           </table>
         </div>
 
@@ -302,50 +712,52 @@ export const letterTemplates: LetterTemplate[] = [
         </div>
 
         <div class="mb-8 text-justify">
-          <p class="indent-8">Demikian surat rekomendasi ini dibuat dengan sebenar-benarnya untuk dipergunakan secara bijak sebagaimana mestinya oleh pihak-pihak yang berkepentingan.</p>
+          <p class="indent-8">Demikian surat rekomendasi ini dibuat dengan sebenarnya agar dapat dipergunakan secara bertanggung jawab oleh pihak yang berkepentingan.</p>
         </div>
       </div>
     `
   },
+
+  // 12. SURAT PENERIMAAN SISWA PINDAHAN
   {
     id: 'penerimaan-pindahan',
     name: 'Surat Penerimaan Siswa Pindahan',
     fields: [
-      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '422.2/076/SMAN1-MRD/VIII/2026', defaultValue: '422.2/076/SMAN1-MRD/VIII/2026' },
+      { key: 'nomor', label: 'Nomor Surat', type: 'text', placeholder: '422.2/076/SMKN2-TIKEP/2026', defaultValue: '422.2/076/SMKN2-TIKEP/2026' },
       { key: 'tanggal_surat', label: 'Tanggal Surat', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'nama_siswa', label: 'Nama Lengkap Siswa', type: 'text', placeholder: 'Annisa Putri', defaultValue: 'Annisa Putri' },
+      { key: 'nama_siswa', label: 'Nama Lengkap Siswa', type: 'text', placeholder: 'Nabila Safitri', defaultValue: 'Nabila Safitri' },
       { key: 'nisn', label: 'NISN', type: 'text', placeholder: '0091234567', defaultValue: '0091234567' },
-      { key: 'asal_sekolah', label: 'Asal Sekolah', type: 'text', placeholder: 'SMA Negeri 5 Kota Bandung', defaultValue: 'SMA Negeri 5 Kota Bandung' },
-      { key: 'kelas_diterima', label: 'Diterima di Kelas', type: 'text', placeholder: 'XI-F (Fase F)', defaultValue: 'XI-F (Fase F)' },
+      { key: 'asal_sekolah', label: 'Asal Sekolah', type: 'text', placeholder: 'SMK Negeri 1 Kota Ternate', defaultValue: 'SMK Negeri 1 Kota Ternate' },
+      { key: 'kelas_diterima', label: 'Diterima di Kelas / Jurusan', type: 'text', placeholder: 'XI Teknik Komputer dan Jaringan', defaultValue: 'XI Teknik Komputer dan Jaringan' },
       { key: 'tanggal_permohonan', label: 'Tanggal Surat Permohonan Ortu', type: 'date', defaultValue: new Date().toISOString().split('T')[0] },
-      { key: 'dasar_penerimaan', label: 'Dasar Pertimbangan Penerimaan', type: 'textarea', placeholder: 'Telah dilakukan verifikasi kelengkapan berkas kepindahan sekolah, hasil psikotes internal, dan kuota daya tampung kelas yang memadai.', defaultValue: 'Telah memenuhi persyaratan administrasi kepindahan sekolah dan kuota daya tampung rombongan belajar kelas yang bersangkutan masih tersedia.' }
+      { key: 'dasar_penerimaan', label: 'Dasar Pertimbangan Penerimaan', type: 'textarea', placeholder: 'Telah diverifikasi kelengkapan berkas kepindahan dan daya tampung rombel kejuruan masih mencukupi.', defaultValue: 'Telah memenuhi persyaratan administrasi kepindahan sekolah dan kuota daya tampung rombongan belajar kelas yang bersangkutan masih tersedia.' }
     ],
     generatePreviewHtml: (vars, profile) => `
       <div class="font-serif text-black text-[12px] leading-relaxed">
-        <div class="text-center mb-6">
+        <div class="text-center mb-5">
           <h4 class="text-[14px] uppercase font-bold tracking-wider underline">SURAT PENERIMAAN SISWA PINDAHAN</h4>
-          <p class="text-[11px] leading-none">Nomor: ${vars.nomor || '-'}</p>
+          <p class="text-[11px] leading-none mt-1">Nomor: ${vars.nomor || '-'}</p>
         </div>
 
-        <div class="mb-4 text-justify">
-          <p class="indent-8">Berdasarkan surat permohonan kepindahan sekolah dari orang tua/wali murid tertanggal ${formatDateIndo(vars.tanggal_permohonan)}, Kepala Sekolah <strong>${profile.schoolName}</strong> menyatakan bersedia menerima siswa di bawah ini:</p>
+        <div class="mb-3 text-justify">
+          <p class="indent-8">Berdasarkan surat permohonan kepindahan dari orang tua/wali siswa tertanggal ${formatDateIndo(vars.tanggal_permohonan)}, Kepala Sekolah <strong>${profile.schoolName}</strong> menyatakan bersedia menerima siswa di bawah ini:</p>
         </div>
 
-        <div class="mb-4 ml-8">
+        <div class="mb-4 ml-6">
           <table class="w-full">
-            <tr><td class="w-36">Nama Siswa</td><td>: <strong>${vars.nama_siswa || '-'}</strong></td></tr>
-            <tr><td>NISN</td><td>: ${vars.nisn || '-'}</td></tr>
-            <tr><td>Asal Sekolah</td><td>: ${vars.asal_sekolah || '-'}</td></tr>
-            <tr><td>Diterima di Kelas</td><td>: <strong>${vars.kelas_diterima || '-'}</strong></td></tr>
+            <tr><td class="w-36 py-0.5">Nama Siswa</td><td>: <strong>${vars.nama_siswa || '-'}</strong></td></tr>
+            <tr><td class="py-0.5">NISN</td><td>: ${vars.nisn || '-'}</td></tr>
+            <tr><td class="py-0.5">Asal Sekolah</td><td>: ${vars.asal_sekolah || '-'}</td></tr>
+            <tr><td class="py-0.5">Diterima di Kelas</td><td>: <strong>${vars.kelas_diterima || '-'}</strong></td></tr>
           </table>
         </div>
 
         <div class="mb-4 text-justify">
-          <p class="indent-8"><strong>Dasar Pertimbangan Penerimaan:</strong></p>
+          <p class="indent-8"><strong>Dasar Pertimbangan:</strong></p>
           <div class="border border-black p-3 bg-slate-50 mt-1 print:bg-transparent text-justify">
             ${vars.dasar_penerimaan || '-'}
           </div>
-          <p class="mt-2 indent-8">Dengan ketentuan bahwa pihak siswa bersedia mematuhi tata tertib sekolah kami dan melengkapi surat pelepasan resmi dari sekolah asal beserta buku mutasi rapor yang sudah disahkan dinas pendidikan setempat.</p>
+          <p class="mt-2 indent-8">Siswa wajib menyerahkan berkas mutasi resmi (Surat Keterangan Pindah & Rapor Asli yang telah disahkan) dan bersedia menaati seluruh tata tertib di sekolah kami.</p>
         </div>
 
         <div class="mb-8 text-justify">

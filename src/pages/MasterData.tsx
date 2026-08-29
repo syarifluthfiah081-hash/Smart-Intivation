@@ -1,39 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { getSchoolProfile, saveSchoolProfile } from '../services/storage';
-import { LetterheadPreview } from '../components/LetterheadPreview';
+import { LetterheadPreview, DEFAULT_SCHOOL_PROFILE } from '../components/LetterheadPreview';
 import type { SchoolProfile } from '../components/LetterheadPreview';
-import { Save, Upload, Trash2, CheckCircle, Info, Loader2 } from 'lucide-react';
+import { LOGO_KIRI_DEFAULT, LOGO_KANAN_DEFAULT } from '../assets/defaultLogos';
+import { Save, Upload, CheckCircle, Info, Loader2, RotateCcw } from 'lucide-react';
+
+
 
 export const MasterData: React.FC = () => {
-  const [profile, setProfile] = useState<SchoolProfile>({
-    schoolName: '',
-    foundationName: '',
-    deptName: '',
-    npsn: '',
-    address: '',
-    postalCode: '',
-    phone: '',
-    email: '',
-    website: '',
-    logoUrl: '',
-    principalName: '',
-    principalNip: '',
-  });
+  const [profile, setProfile] = useState<SchoolProfile>(DEFAULT_SCHOOL_PROFILE);
 
   const [toastMsg, setToastMsg] = useState('');
-  const [logoPreview, setLogoPreview] = useState('');
+  const [logoKiriPreview, setLogoKiriPreview] = useState<string>(LOGO_KIRI_DEFAULT);
+  const [logoKananPreview, setLogoKananPreview] = useState<string>(LOGO_KANAN_DEFAULT);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load profile from Firestore on mount
+  // Load profile from Firestore / LocalStorage on mount
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const data = await getSchoolProfile();
-        setProfile(data);
-        if (data.logoUrl) {
-          setLogoPreview(data.logoUrl);
-        }
+        const fullData = {
+          ...DEFAULT_SCHOOL_PROFILE,
+          ...data,
+          logoUrl: data.logoUrl || LOGO_KIRI_DEFAULT,
+          logoKananUrl: data.logoKananUrl || LOGO_KANAN_DEFAULT,
+        };
+        setProfile(fullData);
+        setLogoKiriPreview(fullData.logoUrl || LOGO_KIRI_DEFAULT);
+        setLogoKananPreview(fullData.logoKananUrl || LOGO_KANAN_DEFAULT);
       } catch (err) {
         console.error('Gagal mengambil profil sekolah:', err);
       } finally {
@@ -51,126 +47,44 @@ export const MasterData: React.FC = () => {
     }));
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const processImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    side: 'kiri' | 'kanan'
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         alert('Format file tidak didukung! Pilih berkas gambar dengan format PNG, JPG, atau JPEG.');
         return;
       }
 
-      if (file.size > 1024 * 1024) {
-        alert('File logo terlalu besar! Maksimal ukuran logo adalah 1MB.');
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File logo terlalu besar! Maksimal ukuran logo adalah 2MB.');
         return;
       }
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 200; // Resizing to max 200px for optimal storage and Kop layout
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round(height * maxDim / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round(width * maxDim / height);
-              height = maxDim;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Clean solid black or near-black background on upload
-            const imgData = ctx.getImageData(0, 0, width, height);
-            const dataArr = imgData.data;
-            const isNearBlack = (r: number, g: number, b: number, a: number): boolean => {
-              if (a < 10) return false;
-              return r < 50 && g < 50 && b < 50;
-            };
-            
-            const visited = new Uint8Array(width * height);
-            const queue: [number, number][] = [];
-            const pushPixel = (x: number, y: number) => {
-              const idx = y * width + x;
-              if (!visited[idx]) {
-                const pixelIdx = idx * 4;
-                if (isNearBlack(dataArr[pixelIdx], dataArr[pixelIdx + 1], dataArr[pixelIdx + 2], dataArr[pixelIdx + 3])) {
-                  visited[idx] = 1;
-                  queue.push([x, y]);
-                }
-              }
-            };
-            
-            // Seed BFS queue with border pixels
-            for (let x = 0; x < width; x++) {
-              pushPixel(x, 0);
-              pushPixel(x, height - 1);
-            }
-            for (let y = 0; y < height; y++) {
-              pushPixel(0, y);
-              pushPixel(width - 1, y);
-            }
-            
-            let head = 0;
-            while (head < queue.length) {
-              const [cx, cy] = queue[head++];
-              const idx = (cy * width + cx) * 4;
-              dataArr[idx + 3] = 0; // Set alpha to transparent
-              
-              const neighbors = [
-                [cx + 1, cy],
-                [cx - 1, cy],
-                [cx, cy + 1],
-                [cx, cy - 1]
-              ];
-              for (const [nx, ny] of neighbors) {
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                  const nidx = ny * width + nx;
-                  if (!visited[nidx]) {
-                    const pixelIdx = nidx * 4;
-                    if (isNearBlack(dataArr[pixelIdx], dataArr[pixelIdx + 1], dataArr[pixelIdx + 2], dataArr[pixelIdx + 3])) {
-                      visited[nidx] = 1;
-                      queue.push([nx, ny]);
-                    }
-                  }
-                }
-              }
-            }
-            ctx.putImageData(imgData, 0, 0);
-
-            // Always save as transparent PNG to preserve transparency
-            const compressedBase64 = canvas.toDataURL('image/png');
-            setLogoPreview(compressedBase64);
-            setProfile(prev => ({
-              ...prev,
-              logoUrl: compressedBase64,
-            }));
-          }
-        };
-        img.src = reader.result as string;
+        const base64 = reader.result as string;
+        if (side === 'kiri') {
+          setLogoKiriPreview(base64);
+          setProfile(prev => ({ ...prev, logoUrl: base64 }));
+        } else {
+          setLogoKananPreview(base64);
+          setProfile(prev => ({ ...prev, logoKananUrl: base64 }));
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleRemoveLogo = () => {
-    setLogoPreview('');
-    setProfile(prev => ({
-      ...prev,
-      logoUrl: '',
-    }));
+  const handleResetToDefault = () => {
+    if (window.confirm('Reset data profil & logo ke format bawaan resmi SMK Negeri 2 Kota Tidore Kepulauan?')) {
+      setProfile(DEFAULT_SCHOOL_PROFILE);
+      setLogoKiriPreview(LOGO_KIRI_DEFAULT);
+      setLogoKananPreview(LOGO_KANAN_DEFAULT);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,7 +92,7 @@ export const MasterData: React.FC = () => {
     setIsSaving(true);
     try {
       await saveSchoolProfile(profile);
-      setToastMsg('Profil sekolah berhasil disimpan!');
+      setToastMsg('Profil sekolah SMKN 2 Tikep berhasil disimpan!');
       setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       console.error('Gagal menyimpan profil sekolah:', err);
@@ -204,19 +118,29 @@ export const MasterData: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-800">Profil Sekolah (Kop Surat)</h2>
+          <h2 className="text-xl font-extrabold text-slate-800">Profil Sekolah & Kop Surat</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Konfigurasi profil instansi sekolah yang akan otomatis disematkan pada Kop Surat seluruh dokumen.
+            Konfigurasi profil resmi SMK Negeri 2 Kota Tidore Kepulauan dan logo ganda permanen Kop Surat.
           </p>
         </div>
 
-        {/* Saved Alert Toast */}
-        {toastMsg && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold shadow-sm animate-bounce">
-            <CheckCircle className="w-4 h-4" />
-            <span>{toastMsg}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleResetToDefault}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Profil SMKN 2 Tikep</span>
+          </button>
+
+          {toastMsg && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold shadow-sm animate-bounce">
+              <CheckCircle className="w-4 h-4" />
+              <span>{toastMsg}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Layout Grid */}
@@ -226,23 +150,10 @@ export const MasterData: React.FC = () => {
         <form onSubmit={handleSubmit} className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden p-6 space-y-6">
           <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
             <Info className="w-4 h-4 text-blue-500" />
-            Formulir Profil Sekolah
+            Formulir Profil Instansi
           </h3>
 
           <div className="space-y-4">
-            {/* Yayasan (Opsional) */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1">Nama Yayasan / Lembaga (Opsional)</label>
-              <input
-                type="text"
-                name="foundationName"
-                value={profile.foundationName}
-                onChange={handleChange}
-                placeholder="Misal: YAYASAN PENDIDIKAN DHARMA PERTIWI"
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
-              />
-            </div>
-
             {/* Dinas Pendidikan Hierarchy */}
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1">Dinas Pendidikan Atasan</label>
@@ -251,23 +162,23 @@ export const MasterData: React.FC = () => {
                 rows={2}
                 value={profile.deptName}
                 onChange={handleChange}
-                placeholder="Misal: PEMERINTAH PROVINSI BALI&#10;DINAS PENDIDIKAN KEPEMUDAAN DAN OLAHRAGA"
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
+                placeholder="PEMERINTAH DAERAH PROVINSI MALUKU UTARA&#10;DINAS PENDIDIKAN DAN KEBUDAYAAN"
+                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all font-semibold uppercase"
               />
             </div>
 
             {/* Nama Sekolah & NPSN */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-600 mb-1">Nama Sekolah Utama</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Nama Satuan Pendidikan (Sekolah)</label>
                 <input
                   type="text"
                   name="schoolName"
                   required
                   value={profile.schoolName}
                   onChange={handleChange}
-                  placeholder="Misal: SMA NEGERI 1 DENPASAR"
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
+                  placeholder="SMK NEGERI 2 KOTA TIDORE KEPULAUAN"
+                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all font-bold uppercase"
                 />
               </div>
               <div>
@@ -275,10 +186,9 @@ export const MasterData: React.FC = () => {
                 <input
                   type="text"
                   name="npsn"
-                  required
                   value={profile.npsn}
                   onChange={handleChange}
-                  placeholder="Misal: 50123456"
+                  placeholder="60201509"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
@@ -287,14 +197,14 @@ export const MasterData: React.FC = () => {
             {/* Alamat & Kodepos */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-3">
-                <label className="block text-xs font-bold text-slate-600 mb-1">Alamat Jalan Lengkap</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Alamat Lengkap Sekolah</label>
                 <input
                   type="text"
                   name="address"
                   required
                   value={profile.address}
                   onChange={handleChange}
-                  placeholder="Misal: Jl. Kamboja No. 12, Denpasar Utara"
+                  placeholder="Jl. Raya Soasio Rum Kel. Tomalou Kec. Tidore Selatan"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
@@ -305,7 +215,7 @@ export const MasterData: React.FC = () => {
                   name="postalCode"
                   value={profile.postalCode}
                   onChange={handleChange}
-                  placeholder="80233"
+                  placeholder="97811"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
@@ -318,22 +228,21 @@ export const MasterData: React.FC = () => {
                 <input
                   type="text"
                   name="phone"
-                  required
                   value={profile.phone}
                   onChange={handleChange}
-                  placeholder="(0361) 222333"
+                  placeholder="-"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Email Sekolah</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Email Resmi Sekolah</label>
                 <input
                   type="email"
                   name="email"
                   required
                   value={profile.email}
                   onChange={handleChange}
-                  placeholder="info@sman1dps.sch.id"
+                  placeholder="smkn2tikep@yahoo.com"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
@@ -344,7 +253,7 @@ export const MasterData: React.FC = () => {
                   name="website"
                   value={profile.website}
                   onChange={handleChange}
-                  placeholder="www.sman1dps.sch.id"
+                  placeholder="www.smkn2tikep.sch.id"
                   className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
                 />
               </div>
@@ -360,8 +269,8 @@ export const MasterData: React.FC = () => {
                   required
                   value={profile.principalName}
                   onChange={handleChange}
-                  placeholder="Misal: Drs. I Wayan Sukarta, M.Pd."
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
+                  placeholder="Ali Djumati.S.Pd.,M.Si"
+                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all font-semibold"
                 />
               </div>
               <div>
@@ -372,50 +281,91 @@ export const MasterData: React.FC = () => {
                   required
                   value={profile.principalNip}
                   onChange={handleChange}
-                  placeholder="Misal: 196805121995031004"
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all"
+                  placeholder="1977601062003121005"
+                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl transition-all font-mono font-medium"
                 />
               </div>
             </div>
 
-            {/* Logo Upload */}
-            <div className="pt-2 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-600 mb-2">Logo Resmi Sekolah</label>
-              <div className="flex flex-col md:flex-row items-center gap-4">
-                <div className="w-20 h-20 rounded-xl border border-slate-200 flex items-center justify-center bg-white overflow-hidden relative shadow-inner">
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-[10px] text-slate-400 font-semibold">No Logo</span>
-                  )}
-                </div>
-                <div className="flex-1 flex gap-2">
-                  <label className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-200 text-xs transition-all cursor-pointer">
-                    <Upload className="w-4 h-4" />
-                    <span>Pilih Berkas Logo</span>
-                    <input
-                      type="file"
-                      accept=".png, .jpg, .jpeg"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                    />
-                  </label>
+            {/* Dual Logos Upload & Management */}
+            <div className="pt-4 border-t border-slate-100 space-y-4">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Logo Resmi Kop Surat (Ganda: Kiri & Kanan)
+              </h4>
 
-                  {logoPreview && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveLogo}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl border border-rose-100 text-xs transition-all cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Hapus</span>
-                    </button>
-                  )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. Logo Kiri (Hijau - Pemda / Daerah) */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                  <span className="text-[11px] font-bold text-slate-700 block">1. Logo Kiri (Warna Hijau - Pemda)</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl border border-slate-300 bg-white flex items-center justify-center overflow-hidden p-1 shadow-inner">
+                      {logoKiriPreview ? (
+                        <img src={logoKiriPreview} alt="Logo Kiri" className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[9px] text-slate-400">No Logo</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-300 text-[11px] transition-all cursor-pointer shadow-sm">
+                        <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Ganti Logo Kiri</span>
+                        <input
+                          type="file"
+                          accept=".png, .jpg, .jpeg, .webp"
+                          onChange={(e) => processImageUpload(e, 'kiri')}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLogoKiriPreview(LOGO_KIRI_DEFAULT);
+                          setProfile(p => ({ ...p, logoUrl: LOGO_KIRI_DEFAULT }));
+                        }}
+                        className="w-full text-center text-[10px] text-blue-600 hover:underline font-semibold"
+                      >
+                        Pakai Bawaan Hijau
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Logo Kanan (Biru - SMKN 2 Tidore Kepulauan) */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                  <span className="text-[11px] font-bold text-slate-700 block">2. Logo Kanan (Warna Biru - SMKN 2 Tikep)</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl border border-slate-300 bg-white flex items-center justify-center overflow-hidden p-1 shadow-inner">
+                      {logoKananPreview ? (
+                        <img src={logoKananPreview} alt="Logo Kanan" className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[9px] text-slate-400">No Logo</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <label className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-300 text-[11px] transition-all cursor-pointer shadow-sm">
+                        <Upload className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ganti Logo Kanan</span>
+                        <input
+                          type="file"
+                          accept=".png, .jpg, .jpeg, .webp"
+                          onChange={(e) => processImageUpload(e, 'kanan')}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLogoKananPreview(LOGO_KANAN_DEFAULT);
+                          setProfile(p => ({ ...p, logoKananUrl: LOGO_KANAN_DEFAULT }));
+                        }}
+                        className="w-full text-center text-[10px] text-blue-600 hover:underline font-semibold"
+                      >
+                        Pakai Bawaan Biru
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400 mt-2">
-                Format yang didukung: PNG, JPG, GIF. Ukuran maksimum berkas: 1MB. Resolusi ideal: 300x300 piksel.
-              </p>
             </div>
           </div>
 
@@ -442,26 +392,25 @@ export const MasterData: React.FC = () => {
         </form>
 
         {/* Real-time Kop Surat Preview (Right 5 Columns) */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-20">
           <div className="bg-slate-100 p-4 border border-slate-200 rounded-2xl">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Live Preview Kop Surat</h4>
-              <span className="text-[9px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">Real-time</span>
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Live Kop Surat Preview</h4>
+              <span className="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Resmi</span>
             </div>
-            <div className="bg-white border border-slate-300 rounded-xl p-6 shadow-sm overflow-x-auto">
-              {/* Scale down slightly to fit preview cleanly in sidebar */}
-              <div className="w-[180mm] bg-white origin-top-left scale-[0.55] md:scale-[0.52] lg:scale-[0.45] xl:scale-[0.52] h-[60mm] -mb-[26mm] md:-mb-[28mm] lg:-mb-[32mm] xl:-mb-[28mm]">
+            <div className="bg-white border border-slate-300 rounded-xl p-5 shadow-sm overflow-x-auto">
+              <div className="w-[180mm] bg-white origin-top-left scale-[0.55] md:scale-[0.50] lg:scale-[0.45] xl:scale-[0.50] h-[60mm] -mb-[26mm] md:-mb-[30mm] lg:-mb-[33mm] xl:-mb-[30mm]">
                 <LetterheadPreview profile={profile} />
               </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 text-blue-800 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
-            <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-blue-50 border border-blue-100 text-blue-900 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Info Singkat Dinas</p>
-              <p className="mt-0.5 text-blue-700">
-                Pemerintah Provinsi Dinas Pendidikan biasanya ditulis pada baris atas Kop Surat sebelum nama sekolah. Pastikan data pimpinan (Nama & NIP) diisi lengkap untuk pembubuhan tanda tangan otomatis pada surat yang diterbitkan.
+              <p className="font-bold">SMKN 2 Kota Tidore Kepulauan</p>
+              <p className="mt-0.5 text-blue-800 text-[11px]">
+                Profil dan logo ini tersimpan permanen dan secara otomatis terpasang pada seluruh format dokumen persuratan, cetak langsung, serta ekspor PDF/Word.
               </p>
             </div>
           </div>

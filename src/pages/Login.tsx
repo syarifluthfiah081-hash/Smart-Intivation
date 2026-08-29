@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, User as UserIcon, Shield, GraduationCap, Loader2, FileText } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, Shield, GraduationCap, Loader2 } from 'lucide-react';
+
+
 import { loginFirebase, registerFirebase } from '../services/auth';
 import type { User } from '../services/auth';
 
@@ -78,12 +80,19 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         
         {/* App Logo & Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-600/20 text-blue-400 rounded-xl mb-3 border border-blue-500/30">
-            <FileText className="w-8 h-8" />
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-white/10 p-1 border border-white/20 overflow-hidden flex items-center justify-center">
+              <img src="/logo-kiri.jpg" alt="Logo Pemda" className="w-full h-full object-contain" />
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-white/10 p-1 border border-white/20 overflow-hidden flex items-center justify-center">
+              <img src="/logo-kanan.jpg" alt="Logo SMKN 2 Tikep" className="w-full h-full object-contain" />
+            </div>
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Smart School Letter</h1>
-          <p className="text-sm text-slate-400 mt-1">Sistem Pembuat Surat & Dokumen Otomatis</p>
+          <h1 className="text-xl font-extrabold text-white tracking-tight">Smart School Letter</h1>
+          <p className="text-xs text-blue-300 font-bold uppercase tracking-wider mt-0.5">SMKN 2 Kota Tidore Kepulauan</p>
+          <p className="text-[11px] text-slate-400 mt-1">Sistem Pembuat & Editor Surat Dinas Otomatis</p>
         </div>
+
 
         {/* Tab Toggle */}
         <div className="flex bg-slate-950/40 p-1 rounded-xl mb-6 border border-white/5">

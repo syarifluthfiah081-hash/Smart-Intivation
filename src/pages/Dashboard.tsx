@@ -85,8 +85,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigateToTab }) =
             Selamat Datang Kembali, {user.fullName}!
           </h2>
           <p className="text-xs text-blue-100/90 leading-relaxed">
-            Anda masuk sebagai <strong className="capitalize text-white">{user.role}</strong> sekolah <strong>{schoolName || 'SMA NEGERI 1 MERDEKA'}</strong>. Gunakan pintasan di bawah untuk mencetak dokumen surat dinas secara otomatis.
+            Anda masuk sebagai <strong className="capitalize text-white">{user.role}</strong> di <strong>{schoolName || 'SMK NEGERI 2 KOTA TIDORE KEPULAUAN'}</strong>. Gunakan pintasan di bawah untuk membuat, mengedit seluruh teks surat secara bebas, dan mencetak dokumen dinas resmi.
           </p>
+
         </div>
       </div>
 

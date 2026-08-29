@@ -1,6 +1,24 @@
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, BorderStyle, WidthType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, BorderStyle, WidthType, ImageRun } from 'docx';
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { formatDateIndo } from '../templates/letterTemplates';
+
+// Helper to convert base64 data url to Uint8Array for docx ImageRun
+function base64ToUint8Array(base64: string): Uint8Array | null {
+  try {
+    const parts = base64.split(';base64,');
+    const raw = parts.length > 1 ? parts[1] : parts[0];
+    const binary = atob(raw);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch (e) {
+    console.warn('Gagal decode base64 gambar untuk docx:', e);
+    return null;
+  }
+}
 
 export const exportToDocx = async (
   profile: SchoolProfile,
@@ -8,12 +26,63 @@ export const exportToDocx = async (
   variables: Record<string, string>,
   filename: string
 ): Promise<void> => {
-  // 1. Setup Kop Surat Dinas
+  // 1. Setup Dual Logos (Kiri Hijau & Kanan Biru)
+  let leftLogoRun: Paragraph[] = [];
+  let rightLogoRun: Paragraph[] = [];
+
+  if (profile.logoUrl) {
+    const leftBytes = base64ToUint8Array(profile.logoUrl);
+    if (leftBytes) {
+      leftLogoRun = [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new ImageRun({
+              data: leftBytes,
+              transformation: { width: 65, height: 65 },
+            } as any),
+          ],
+        }),
+      ];
+    }
+  }
+
+  if (profile.logoKananUrl) {
+    const rightBytes = base64ToUint8Array(profile.logoKananUrl);
+    if (rightBytes) {
+      rightLogoRun = [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new ImageRun({
+              data: rightBytes,
+              transformation: { width: 65, height: 65 },
+            } as any),
+          ],
+        }),
+      ];
+    }
+  }
+
+  // 2. Kop Surat Table with Left Logo, Center Text, Right Logo
   const kopRows = [
     new TableRow({
       children: [
+        // Left Logo Cell (18%)
         new TableCell({
-          width: { size: 100, type: WidthType.PERCENTAGE },
+          width: { size: 18, type: WidthType.PERCENTAGE },
+          borders: {
+            bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+            top: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+          },
+          children: leftLogoRun.length > 0 ? leftLogoRun : [new Paragraph({ text: '' })],
+        }),
+
+        // Center Info Cell (64%)
+        new TableCell({
+          width: { size: 64, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
             top: { style: BorderStyle.NONE },
@@ -21,34 +90,48 @@ export const exportToDocx = async (
             right: { style: BorderStyle.NONE },
           },
           children: [
-            ...(profile.foundationName ? [
+            ...(profile.deptName ? profile.deptName.split('\n').map(line => 
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: profile.foundationName.toUpperCase(), bold: true, size: 20, font: 'Times New Roman' }),
+                  new TextRun({ text: line.toUpperCase(), bold: true, size: 20, font: 'Times New Roman' }),
+                ],
+              })
+            ) : []),
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({ text: profile.schoolName.toUpperCase(), bold: true, size: 24, font: 'Times New Roman' }),
+              ],
+            }),
+            new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({ text: `${profile.address}${profile.postalCode ? ` Kode Pos ${profile.postalCode}` : ''}`, size: 17, font: 'Times New Roman' }),
+              ],
+            }),
+            ...(profile.email ? [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({ text: `Email: ${profile.email}${profile.website ? ` | Web: ${profile.website}` : ''}`, size: 16, font: 'Times New Roman' }),
                 ],
               })
             ] : []),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({ text: profile.deptName?.toUpperCase() || 'DINAS PENDIDIKAN', bold: false, size: 22, font: 'Times New Roman' }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({ text: profile.schoolName.toUpperCase(), bold: true, size: 28, font: 'Times New Roman' }),
-              ],
-            }),
-            new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({ text: `${profile.address}${profile.email ? ` | Email: ${profile.email}` : ''}`, size: 18, font: 'Times New Roman' }),
-              ],
-            }),
-            new Paragraph({ text: '' }), // Spacer
+            new Paragraph({ text: '' }),
           ],
+        }),
+
+        // Right Logo Cell (18%)
+        new TableCell({
+          width: { size: 18, type: WidthType.PERCENTAGE },
+          borders: {
+            bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+            top: { style: BorderStyle.NONE },
+            left: { style: BorderStyle.NONE },
+            right: { style: BorderStyle.NONE },
+          },
+          children: rightLogoRun.length > 0 ? rightLogoRun : [new Paragraph({ text: '' })],
         }),
       ],
     }),
@@ -59,8 +142,8 @@ export const exportToDocx = async (
     rows: kopRows,
   });
 
-  // 2. Metadata Section (Nomor, Lampiran, Tanggal)
-  const dateStr = `${profile.address.split(',')[1] || 'Jakarta'}, ${formatDateIndo(variables.tanggal_surat || new Date().toISOString())}`;
+  // 3. Metadata Section (Nomor, Lampiran, Tanggal)
+  const dateStr = `Tidore, ${formatDateIndo(variables.tanggal_surat || variables.tanggal_sk || variables.tanggal_diterima || new Date().toISOString())}`;
   
   const metadataRows = [
     new TableRow({
@@ -76,7 +159,7 @@ export const exportToDocx = async (
           children: [
             new Paragraph({
               children: [
-                new TextRun({ text: `Nomor     : ${variables.nomor || '-'}`, font: 'Times New Roman', size: 22 }),
+                new TextRun({ text: `Nomor     : ${variables.nomor || variables.nomor_agenda || '-'}`, font: 'Times New Roman', size: 22 }),
               ],
             }),
             new Paragraph({
@@ -118,116 +201,70 @@ export const exportToDocx = async (
     rows: metadataRows,
   });
 
-  // 3. Recipient Section
-  const recipientPara = new Paragraph({
-    spacing: { before: 240, after: 240 },
-    children: [
-      new TextRun({ text: 'Kepada Yth.\n', font: 'Times New Roman', size: 22 }),
-      new TextRun({ text: `${variables.penerima || 'Bapak/Ibu Orang Tua/Wali Murid'}\n`, bold: true, font: 'Times New Roman', size: 22 }),
-      new TextRun({ text: 'di Tempat', font: 'Times New Roman', size: 22 }),
-    ],
-  });
-
   // 4. Letter Content Body Paragraphs
   const bodyParagraphs: Paragraph[] = [];
-  
-  // Custom parsing based on template type
-  if (templateName.includes('Undangan')) {
-    bodyParagraphs.push(
-      new Paragraph({
-        spacing: { after: 120 },
-        children: [new TextRun({ text: 'Dengan hormat,', font: 'Times New Roman', size: 22 })],
-      }),
-      new Paragraph({
-        spacing: { after: 120 },
-        indent: { left: 480 },
-        children: [
-          new TextRun({
-            text: 'Sehubungan dengan dimulainya tahun ajaran baru serta penyusunan program pembelajaran dan anggaran sekolah, kami bermaksud mengundang Bapak/Ibu Orang Tua/Wali Murid untuk menghadiri Rapat Pertemuan Wali Murid yang akan diselenggarakan pada:',
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      }),
-      new Paragraph({
-        indent: { left: 480 },
-        children: [
-          new TextRun({ text: `Hari, Tanggal : ${variables.hari_tanggal || '-'}\n`, font: 'Times New Roman', size: 22 }),
-          new TextRun({ text: `Waktu          : ${variables.waktu || '-'}\n`, font: 'Times New Roman', size: 22 }),
-          new TextRun({ text: `Tempat         : ${variables.tempat || '-'}\n`, font: 'Times New Roman', size: 22 }),
-          new TextRun({ text: `Agenda         : ${variables.agenda || '-'}`, font: 'Times New Roman', size: 22 }),
-        ],
-      }),
-      new Paragraph({
-        spacing: { before: 120, after: 120 },
-        indent: { left: 480 },
-        children: [
-          new TextRun({
-            text: 'Mengingat pentingnya agenda rapat ini guna menyelaraskan program pendidikan anak-anak kita, kehadiran Bapak/Ibu sangat kami harapkan. Jika berhalangan hadir, mohon dapat mewakilkan dengan membawa surat kuasa.',
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      }),
-      new Paragraph({
-        spacing: { after: 240 },
-        children: [
-          new TextRun({
-            text: 'Demikian undangan ini kami sampaikan. Atas perhatian, kehadiran, dan kerja sama yang baik, kami ucapkan terima kasih.',
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      })
-    );
-  } else {
-    // Fallback simple rendering for other types
-    bodyParagraphs.push(
-      new Paragraph({
-        spacing: { after: 120 },
-        children: [new TextRun({ text: `Perihal: Penerbitan dokumen ${templateName} resmi.`, font: 'Times New Roman', size: 22 })],
-      }),
-      new Paragraph({
-        spacing: { after: 240 },
-        indent: { left: 480 },
-        children: [
-          new TextRun({
-            text: 'Dokumen ini secara resmi dikeluarkan oleh instansi sekolah berdasarkan data yang sah. Variabel yang diisi pada aplikasi tercantum di bawah:',
-            font: 'Times New Roman',
-            size: 22,
-          }),
-        ],
-      })
-    );
 
-    // List all variables
-    Object.entries(variables).forEach(([k, v]) => {
-      if (k !== 'nomor' && k !== 'tanggal_surat') {
-        bodyParagraphs.push(
-          new Paragraph({
-            indent: { left: 720 },
-            children: [
-              new TextRun({ text: `${k.replace('_', ' ').toUpperCase()}: `, bold: true, font: 'Times New Roman', size: 20 }),
-              new TextRun({ text: v, font: 'Times New Roman', size: 20 }),
-            ],
-          })
-        );
-      }
-    });
-
+  // Recipient if applicable
+  const recipientName = variables.penerima || variables.penerima_tujuan || variables.nama_ortu || '';
+  if (recipientName) {
     bodyParagraphs.push(
       new Paragraph({
-        spacing: { before: 240, after: 120 },
+        spacing: { before: 240, after: 240 },
         children: [
-          new TextRun({
-            text: 'Demikian surat ini dibuat untuk dapat dipergunakan sebagaimana mestinya.',
-            font: 'Times New Roman',
-            size: 22,
-          }),
+          new TextRun({ text: 'Kepada Yth.\n', font: 'Times New Roman', size: 22 }),
+          new TextRun({ text: `${recipientName}\n`, bold: true, font: 'Times New Roman', size: 22 }),
+          new TextRun({ text: 'di Tempat', font: 'Times New Roman', size: 22 }),
         ],
       })
     );
   }
+
+  bodyParagraphs.push(
+    new Paragraph({
+      spacing: { after: 120 },
+      children: [new TextRun({ text: 'Dengan hormat,', font: 'Times New Roman', size: 22 })],
+    }),
+    new Paragraph({
+      spacing: { after: 200 },
+      indent: { left: 480 },
+      children: [
+        new TextRun({
+          text: `Surat dinas ini resmi dikeluarkan oleh SMK Negeri 2 Kota Tidore Kepulauan terkait perihal "${templateName}". Rincian variabel yang tercatat adalah sebagai berikut:`,
+          font: 'Times New Roman',
+          size: 22,
+        }),
+      ],
+    })
+  );
+
+  // List all key variables
+  Object.entries(variables).forEach(([k, v]) => {
+    if (k !== 'nomor' && k !== 'tanggal_surat' && k !== 'lampiran') {
+      bodyParagraphs.push(
+        new Paragraph({
+          indent: { left: 720 },
+          children: [
+            new TextRun({ text: `${k.replace(/_/g, ' ').toUpperCase()}: `, bold: true, font: 'Times New Roman', size: 21 }),
+            new TextRun({ text: `${v}`, font: 'Times New Roman', size: 21 }),
+          ],
+        })
+      );
+    }
+  });
+
+  bodyParagraphs.push(
+    new Paragraph({
+      spacing: { before: 240, after: 120 },
+      indent: { left: 480 },
+      children: [
+        new TextRun({
+          text: 'Demikian surat ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.',
+          font: 'Times New Roman',
+          size: 22,
+        }),
+      ],
+    })
+  );
 
   // 5. Signature Section
   const signatureTable = new Table({
@@ -236,7 +273,7 @@ export const exportToDocx = async (
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 50, type: WidthType.PERCENTAGE },
+            width: { size: 55, type: WidthType.PERCENTAGE },
             borders: {
               top: { style: BorderStyle.NONE },
               bottom: { style: BorderStyle.NONE },
@@ -246,7 +283,7 @@ export const exportToDocx = async (
             children: [],
           }),
           new TableCell({
-            width: { size: 50, type: WidthType.PERCENTAGE },
+            width: { size: 45, type: WidthType.PERCENTAGE },
             borders: {
               top: { style: BorderStyle.NONE },
               bottom: { style: BorderStyle.NONE },
@@ -257,6 +294,7 @@ export const exportToDocx = async (
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
+                  new TextRun({ text: `Tidore, ${formatDateIndo(variables.tanggal_surat || new Date().toISOString())}\n`, font: 'Times New Roman', size: 22 }),
                   new TextRun({ text: 'Kepala Sekolah,\n\n\n\n\n', font: 'Times New Roman', size: 22 }),
                   new TextRun({ text: profile.principalName, bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
                   new TextRun({ text: `\nNIP. ${profile.principalNip}`, font: 'Times New Roman', size: 22 }),
@@ -276,11 +314,10 @@ export const exportToDocx = async (
         properties: {},
         children: [
           kopTable,
-          new Paragraph({ text: '', spacing: { before: 120 } }), // spacer
+          new Paragraph({ text: '', spacing: { before: 120 } }),
           metadataTable,
-          recipientPara,
           ...bodyParagraphs,
-          new Paragraph({ text: '', spacing: { before: 360 } }), // spacer
+          new Paragraph({ text: '', spacing: { before: 360 } }),
           signatureTable,
         ],
       },

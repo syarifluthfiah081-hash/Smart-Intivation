@@ -22,15 +22,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col h-screen fixed left-0 top-0 no-print z-30">
       {/* Brand Logo Header */}
-      <div className="p-6 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
-        <div className="bg-blue-600 p-2 rounded-lg text-white">
-          <FileSpreadsheet className="w-5 h-5" />
+      <div className="p-5 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
+        <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 p-1 flex items-center justify-center overflow-hidden flex-shrink-0">
+          <img src="/logo-kanan.jpg" alt="SMKN 2 Tikep" className="w-full h-full object-contain" />
         </div>
-        <div>
-          <h2 className="text-sm font-extrabold text-white leading-none tracking-tight">Smart School</h2>
-          <span className="text-[10px] text-slate-500 font-semibold tracking-wide uppercase mt-0.5 block">Letter Gen v1</span>
+        <div className="min-w-0">
+          <h2 className="text-xs font-extrabold text-white leading-tight truncate">Smart School Letter</h2>
+          <span className="text-[10px] text-blue-400 font-bold tracking-wide uppercase block truncate">SMKN 2 Tikep</span>
         </div>
       </div>
+
 
       {/* Nav Menu */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
