@@ -148,7 +148,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
   const handleInputChange = (key: string, value: string) => {
     setFormValues(prev => {
       const updated = { ...prev, [key]: value };
-      // Regenerate template HTML when form values change
       if (profile) {
         setCustomBodyHtml(selectedTemplate.generatePreviewHtml(updated, profile));
       }
@@ -294,7 +293,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
   // 2. Trigger Print Browser (Cetak Langsung)
   const handlePrint = async () => {
     setExportType('print');
-    // Save history in background without blocking print dialog
     handleSaveToHistory().catch(() => {});
     
     setTimeout(() => {
@@ -307,7 +305,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
   const handleExportPdf = async () => {
     setIsExporting(true);
     setExportType('pdf');
-    // Save history in background
     handleSaveToHistory().catch(() => {});
 
     try {
@@ -328,7 +325,6 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
   const handleExportDocx = async () => {
     setIsExporting(true);
     setExportType('word');
-    // Save history in background
     handleSaveToHistory().catch(() => {});
 
     try {
@@ -720,8 +716,13 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                         Kepala Sekolah,
                       </p>
                       
-                      {/* Space for signing */}
-                      <div className="h-[60px]"></div>
+                      {/* Space for signing - Guaranteed 60px height in PDF/Print */}
+                      <div 
+                        style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
+                        className="sig-spacer h-[60px] min-h-[60px]"
+                      >
+                        &nbsp;
+                      </div>
                       
                       <p 
                         contentEditable={isInlineEditing}
@@ -754,7 +755,12 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                       >
                         Mengetahui / Menerima,
                       </p>
-                      <div className="h-[60px]"></div>
+                      <div 
+                        style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
+                        className="sig-spacer h-[60px] min-h-[60px]"
+                      >
+                        &nbsp;
+                      </div>
                       <p 
                         contentEditable={isInlineEditing}
                         suppressContentEditableWarning={true}
@@ -779,7 +785,12 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                       >
                         Kepala Sekolah,
                       </p>
-                      <div className="h-[60px]"></div>
+                      <div 
+                        style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
+                        className="sig-spacer h-[60px] min-h-[60px]"
+                      >
+                        &nbsp;
+                      </div>
                       <p 
                         contentEditable={isInlineEditing}
                         suppressContentEditableWarning={true}

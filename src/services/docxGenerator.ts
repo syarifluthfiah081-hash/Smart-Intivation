@@ -289,7 +289,7 @@ export const exportToDocx = async (
     }
   }
 
-  // 2. Kop Surat Table (HANYA garis bawah ganda, tidak ada garis kotak keliling)
+  // 2. Kop Surat Table (HANYA SATU garis bawah tebal bersih sesuai aplikasi)
   const kopRows = [
     new TableRow({
       children: [
@@ -297,7 +297,7 @@ export const exportToDocx = async (
         new TableCell({
           width: { size: 14, type: WidthType.PERCENTAGE },
           borders: {
-            bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+            bottom: { style: BorderStyle.SINGLE, size: 18, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -309,7 +309,7 @@ export const exportToDocx = async (
         new TableCell({
           width: { size: 72, type: WidthType.PERCENTAGE },
           borders: {
-            bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+            bottom: { style: BorderStyle.SINGLE, size: 18, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -358,7 +358,7 @@ export const exportToDocx = async (
         new TableCell({
           width: { size: 14, type: WidthType.PERCENTAGE },
           borders: {
-            bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+            bottom: { style: BorderStyle.SINGLE, size: 18, color: '000000' },
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -373,7 +373,7 @@ export const exportToDocx = async (
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: {
       top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
-      bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+      bottom: { style: BorderStyle.SINGLE, size: 18, color: '000000' },
       left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
       right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
       insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -488,10 +488,10 @@ export const exportToDocx = async (
         },
         children: [
           kopTable,
-          new Paragraph({ text: '', spacing: { before: 140 } }),
+          new Paragraph({ text: '', spacing: { before: 180 } }),
           ...bodyElements,
           ...(signatureTable ? [
-            new Paragraph({ text: '', spacing: { before: 200 } }),
+            new Paragraph({ text: '', spacing: { before: 240 } }),
             signatureTable,
           ] : []),
         ],

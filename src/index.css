@@ -34,15 +34,13 @@ body {
   padding: 20mm;
 }
 
-/* Tampilan Garis Kop Surat Dinas Sesuai Standar Resmi */
+/* Tampilan Garis Kop Surat Dinas Resmi (Garis Tunggal Bersih Sesuai Aplikasi) */
 .kop-line {
-  border-top: 2.5px solid #000;
-  border-bottom: 0.8px solid #000;
-  height: 2px;
-  margin-top: 4px;
-  margin-bottom: 14px;
+  border-bottom: 2.5px solid #000000;
+  height: 0;
+  margin-top: 8px;
+  margin-bottom: 20px;
 }
-
 
 /* CSS Scrollbar Custom */
 ::-webkit-scrollbar {
@@ -134,4 +132,3 @@ body {
     break-inside: avoid;
   }
 }
-

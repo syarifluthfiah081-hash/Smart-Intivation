@@ -70,7 +70,7 @@ export const exportToPdf = async (
           }
         });
 
-        // Suntikkan CSS resmi murni bebas oklch dengan ukuran logo 72px presisi sesuai aplikasi
+        // Suntikkan CSS resmi murni dengan spasi KOP dan tanda tangan yang kokoh
         const cleanStyle = clonedDoc.createElement('style');
         cleanStyle.innerHTML = `
           * {
@@ -104,7 +104,7 @@ export const exportToPdf = async (
             min-height: 330mm !important;
           }
 
-          /* Logo KOP Surat Presisi Sesuai Tampilan Aplikasi (72px) */
+          /* Logo KOP Surat Proporsional */
           img {
             max-width: 72px !important;
             max-height: 72px !important;
@@ -122,13 +122,21 @@ export const exportToPdf = async (
             max-height: 72px !important;
           }
 
-          /* Garis Ganda KOP Surat Bersih & Proporsional Sesuai Standar Resmi */
+          /* Garis Tunggal KOP Surat Bersih Sesuai Aplikasi dengan Spasi Bawah Mantap */
           .kop-line {
-            border-top: 2.5px solid #000000 !important;
-            border-bottom: 1px solid #000000 !important;
-            height: 2px !important;
-            margin-top: 4px !important;
-            margin-bottom: 14px !important;
+            border-bottom: 2.5px solid #000000 !important;
+            border-top: none !important;
+            height: 0 !important;
+            margin-top: 8px !important;
+            margin-bottom: 22px !important;
+          }
+
+          /* Ruang Tanda Tangan Kokoh 60px */
+          .sig-spacer, .h-\\[60px\\], .min-h-\\[60px\\] {
+            height: 60px !important;
+            min-height: 60px !important;
+            display: block !important;
+            width: 100% !important;
           }
 
           .no-print {
