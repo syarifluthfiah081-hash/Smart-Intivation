@@ -1,6 +1,16 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+// Helper sanitasi CSS untuk menghapus fungsi warna Tailwind 4 yang tidak didukung html2canvas (oklch, oklab, color)
+const sanitizeCssText = (css: string): string => {
+  if (!css) return css;
+  return css
+    .replace(/oklch\([^)]+\)/gi, '#1e293b')
+    .replace(/oklab\([^)]+\)/gi, '#1e293b')
+    .replace(/color\([^)]+\)/gi, '#1e293b')
+    .replace(/hwb\([^)]+\)/gi, '#1e293b');
+};
+
 export const exportToPdf = async (
   elementId: string, 
   filename: string, 
@@ -49,7 +59,7 @@ export const exportToPdf = async (
   element.style.border = 'none';
 
   try {
-    // 2. Render ke canvas dengan resolusi tinggi dan proteksi sanitasi OKLCH untuk Tailwind 4
+    // 2. Render ke canvas dengan resolusi tinggi & proteksi sanitasi OKLAB + OKLCH total
     const canvas = await html2canvas(element, {
       scale: 2.5, // 300 DPI high clarity
       useCORS: true,
@@ -58,15 +68,19 @@ export const exportToPdf = async (
       backgroundColor: '#ffffff',
       windowWidth: element.offsetWidth || 794,
       onclone: (clonedDoc: Document) => {
-        // Sanitasi semua tag <style> di dalam dokumen klon tanpa menghapus layout stylesheet
+        // Hapus link stylesheet eksternal agar html2canvas tidak membaca oklab/oklch dari Tailwind v4
+        const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+        links.forEach(link => link.remove());
+
+        // Sanitasi semua tag <style> di dalam dokumen klon untuk oklab & oklch
         const styleTags = clonedDoc.querySelectorAll('style');
         styleTags.forEach(styleTag => {
           if (styleTag.innerHTML) {
-            styleTag.innerHTML = styleTag.innerHTML.replace(/oklch\([^)]+\)/gi, '#1e293b');
+            styleTag.innerHTML = sanitizeCssText(styleTag.innerHTML);
           }
         });
 
-        // Suntikkan CSS resmi murni dengan ukuran logo 82px dan tata letak KOP persis foto surat asli
+        // Suntikkan CSS resmi murni yang lengkap dan bebas dari fungsi warna tak didukung
         const cleanStyle = clonedDoc.createElement('style');
         cleanStyle.innerHTML = `
           * {
@@ -100,6 +114,18 @@ export const exportToPdf = async (
             min-height: 330mm !important;
           }
 
+          /* KOP Surat Tabel HTML 3 Sel Presisi */
+          table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin: 0 !important;
+          }
+          td, th {
+            color: #000000 !important;
+            font-family: "Times New Roman", Times, serif !important;
+            vertical-align: middle !important;
+          }
+
           /* Logo KOP Surat Persis Foto Asli (82px) */
           img {
             max-width: 82px !important;
@@ -110,7 +136,7 @@ export const exportToPdf = async (
             display: block !important;
             margin: 0 auto !important;
           }
-          .w-\\[82px\\], .w-\\[72px\\] {
+          .w-\\[82px\\], .w-\\[72px\\], .w-\\[85px\\] {
             width: 82px !important;
             height: 82px !important;
             min-width: 82px !important;
@@ -144,14 +170,7 @@ export const exportToPdf = async (
             box-shadow: none !important;
             padding: 0 !important;
           }
-          table {
-            border-collapse: collapse !important;
-            width: 100% !important;
-          }
-          td, th {
-            color: #000000 !important;
-            font-family: "Times New Roman", Times, serif !important;
-          }
+
           h1, h2, h3, h4, h5, h6, p, span, strong, b, u, em, td, th {
             color: #000000 !important;
             font-family: "Times New Roman", Times, serif !important;
@@ -164,18 +183,37 @@ export const exportToPdf = async (
           .underline { text-decoration: underline !important; }
           .uppercase { text-transform: uppercase !important; }
           .indent-8 { text-indent: 2rem !important; }
+          .flex { display: flex !important; }
+          .justify-between { justify-content: space-between !important; }
+          .justify-end { justify-content: flex-end !important; }
+          .items-center { align-items: center !important; }
+          .items-start { align-items: flex-start !important; }
           .border { border: 1px solid #000000 !important; }
           .border-black { border-color: #000000 !important; }
+          .p-3 { padding: 0.75rem !important; }
+          .mt-1 { margin-top: 0.25rem !important; }
+          .mt-2 { margin-top: 0.5rem !important; }
+          .mt-4 { margin-top: 1rem !important; }
+          .mt-6 { margin-top: 1.5rem !important; }
+          .mt-8 { margin-top: 2rem !important; }
+          .mb-2 { margin-bottom: 0.5rem !important; }
+          .mb-3 { margin-bottom: 0.75rem !important; }
+          .mb-4 { margin-bottom: 1rem !important; }
+          .mb-5 { margin-bottom: 1.25rem !important; }
+          .mb-8 { margin-bottom: 2rem !important; }
+          .ml-6 { margin-left: 1.5rem !important; }
           .w-full { width: 100% !important; }
+          .w-40, .w-36 { width: 160px !important; }
+          .w-20 { width: 90px !important; }
         `;
         clonedDoc.head.appendChild(cleanStyle);
 
-        // Bersihkan inline style pada semua elemen klon
+        // Bersihkan inline style pada semua elemen klon (oklch, oklab, color)
         const allClonedElements = clonedDoc.querySelectorAll<HTMLElement>('*');
         allClonedElements.forEach(el => {
           const s = el.getAttribute('style');
-          if (s && s.includes('oklch')) {
-            el.setAttribute('style', s.replace(/oklch\([^)]+\)/gi, '#000000'));
+          if (s) {
+            el.setAttribute('style', sanitizeCssText(s));
           }
         });
       }
