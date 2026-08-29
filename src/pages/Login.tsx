@@ -81,16 +81,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         {/* App Logo & Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-white/10 p-1 border border-white/20 overflow-hidden flex items-center justify-center">
-              <img src="/logo-kiri.jpg" alt="Logo Pemda" className="w-full h-full object-contain" />
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-white/10 p-1 border border-white/20 overflow-hidden flex items-center justify-center">
-              <img src="/logo-kanan.jpg" alt="Logo SMKN 2 Tikep" className="w-full h-full object-contain" />
+            <div className="w-16 h-16 rounded-2xl bg-slate-900/60 p-1.5 border border-blue-500/40 shadow-xl shadow-blue-600/20 flex items-center justify-center">
+              <img src="/logo-app.svg" alt="Smart School Letter Logo" className="w-full h-full object-contain" />
             </div>
           </div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight">Smart School Letter</h1>
-          <p className="text-xs text-blue-300 font-bold uppercase tracking-wider mt-0.5">SMKN 2 Kota Tidore Kepulauan</p>
-          <p className="text-[11px] text-slate-400 mt-1">Sistem Pembuat & Editor Surat Dinas Otomatis</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Smart School Letter</h1>
+          <div className="flex items-center justify-center gap-2 mt-1">
+            <span className="text-xs text-blue-300 font-bold uppercase tracking-wider">SMKN 2 Kota Tidore Kepulauan</span>
+            <span className="text-[9px] bg-blue-500/25 text-blue-300 font-extrabold px-2 py-0.5 rounded-full border border-blue-400/30">PWA READY</span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1.5">Sistem Pembuat & Editor Surat Dinas Otomatis</p>
         </div>
 
 

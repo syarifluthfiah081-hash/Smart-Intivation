@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+
+    <!-- Letter & Shield Gradients -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="letterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <linearGradient id="letterFoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+
+    <!-- Glow & Shadow Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Squircle -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="6" filter="url(#subtleShadow)" />
+
+  <!-- Subtle Cyber/Smart Grid Accents in Background -->
+  <g opacity="0.15" stroke="#38bdf8" stroke-width="2" stroke-linecap="round">
+    <circle cx="256" cy="256" r="180" fill="none" stroke-dasharray="12 8" />
+    <circle cx="256" cy="256" r="140" fill="none" opacity="0.6" />
+    <line x1="256" y1="40" x2="256" y2="70" />
+    <line x1="256" y1="442" x2="256" y2="472" />
+    <line x1="40" y1="256" x2="70" y2="256" />
+    <line x1="442" y1="256" x2="472" y2="256" />
+  </g>
+
+  <!-- Glowing Aura behind Emblem -->
+  <circle cx="256" cy="250" r="120" fill="#3b82f6" opacity="0.25" filter="url(#glow)" />
+
+  <!-- Shield Base Contour -->
+  <path d="M 256 100 
+           C 340 100, 390 140, 390 220 
+           C 390 320, 290 380, 256 405 
+           C 222 380, 122 320, 122 220 
+           C 122 140, 172 100, 256 100 Z" 
+        fill="url(#shieldGrad)" 
+        stroke="url(#letterGrad)" 
+        stroke-width="5" 
+        filter="url(#subtleShadow)" />
+
+  <!-- Letter / Smart Document Core Shape -->
+  <!-- Back / Upper Flap of Document -->
+  <path d="M 160 175 
+           L 352 175 
+           L 352 325 
+           C 352 335, 344 345, 332 345 
+           L 180 345 
+           C 168 345, 160 335, 160 325 
+           Z" 
+        fill="#1e293b" 
+        stroke="#475569" 
+        stroke-width="2" />
+
+  <!-- Document Lines (Official Letter rows) -->
+  <rect x="195" y="210" width="122" height="6" rx="3" fill="#64748b" opacity="0.8" />
+  <rect x="195" y="230" width="85" height="6" rx="3" fill="#64748b" opacity="0.8" />
+  <rect x="195" y="250" width="105" height="6" rx="3" fill="#64748b" opacity="0.8" />
+
+  <!-- Modern Dynamic Envelope / Origami Crest Wings -->
+  <path d="M 152 200 
+           L 256 280 
+           L 360 200 
+           L 360 325 
+           C 360 345, 345 355, 330 355 
+           L 182 355 
+           C 165 355, 152 345, 152 325 
+           Z" 
+        fill="url(#letterGrad)" 
+        opacity="0.95" />
+
+  <!-- Envelope Fold Front Dynamic Geometry -->
+  <path d="M 152 330 
+           L 225 260 
+           L 256 285 
+           L 287 260 
+           L 360 330 
+           C 350 352, 335 355, 325 355 
+           L 187 355 
+           C 175 355, 162 352, 152 330 Z" 
+        fill="url(#letterFoldGrad)" />
+
+  <!-- Smart Quill / Stylus + Golden Academic Star Emblem -->
+  <!-- Quill Nib Shape -->
+  <path d="M 256 125 
+           L 282 195 
+           L 266 195 
+           L 262 265 
+           L 256 278 
+           L 250 265 
+           L 246 195 
+           L 230 195 
+           Z" 
+        fill="url(#goldGrad)" 
+        filter="url(#subtleShadow)" />
+
+  <!-- Nib Center Line & Ink Slit -->
+  <line x1="256" y1="135" x2="256" y2="235" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="256" cy="235" r="3.5" fill="#78350f" />
+
+  <!-- Academic Graduation Cap / Smart Crown Diamond at Top -->
+  <path d="M 256 75 
+           L 295 95 
+           L 256 115 
+           L 217 95 
+           Z" 
+        fill="url(#goldGrad)" 
+        filter="url(#glow)" />
+  
+  <!-- Mini Diamond Tassel / Spark -->
+  <circle cx="302" cy="112" r="4" fill="#fef08a" />
+  <path d="M 295 95 Q 302 102 302 112" stroke="#fef08a" stroke-width="2" fill="none" />
+
+  <!-- Bottom Badge Stars / Tech Sparkles -->
+  <g fill="#38bdf8" filter="url(#glow)">
+    <circle cx="256" cy="385" r="4" />
+    <circle cx="236" cy="380" r="3" opacity="0.8" />
+    <circle cx="276" cy="380" r="3" opacity="0.8" />
+  </g>
+</svg>

@@ -22,13 +22,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, user,
   return (
     <aside className="w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col h-screen fixed left-0 top-0 no-print z-30">
       {/* Brand Logo Header */}
-      <div className="p-5 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
-        <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 p-1 flex items-center justify-center overflow-hidden flex-shrink-0">
-          <img src="/logo-kanan.jpg" alt="SMKN 2 Tikep" className="w-full h-full object-contain" />
+      <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
+        <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 p-1 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-inner">
+          <img src="/logo-app.svg" alt="Smart School Letter" className="w-full h-full object-contain" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h2 className="text-xs font-extrabold text-white leading-tight truncate">Smart School Letter</h2>
-          <span className="text-[10px] text-blue-400 font-bold tracking-wide uppercase block truncate">SMKN 2 Tikep</span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[10px] text-blue-400 font-bold tracking-wide uppercase truncate">SMKN 2 Tikep</span>
+            <span className="text-[9px] bg-blue-500/20 text-blue-300 font-bold px-1.5 py-0.2 rounded border border-blue-400/30">PWA</span>
+          </div>
         </div>
       </div>
 

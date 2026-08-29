@@ -6,6 +6,7 @@ import type { User } from './services/auth';
 import type { GeneratedLetter } from './services/storage';
 import { getSchoolProfile, getLetterHistory, clearStorageCache } from './services/storage';
 import { Menu, X, Loader2 } from 'lucide-react';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 // Lazy load pages for code splitting (reduces initial bundle size and speeds up first load)
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -115,9 +116,14 @@ function App() {
         
         {/* Mobile Header (hidden on print) */}
         <header className="bg-slate-900 text-white px-4 py-3 flex items-center justify-between md:hidden no-print">
-          <div className="flex items-center gap-2">
-            <img src="/logo-kanan.jpg" alt="Logo" className="w-6 h-6 object-contain" />
-            <span className="font-extrabold text-sm tracking-tight">Smart Letter SMKN 2 Tikep</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 p-0.5 flex items-center justify-center overflow-hidden">
+              <img src="/logo-app.svg" alt="Smart Letter Logo" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <span className="font-extrabold text-sm tracking-tight block leading-tight">Smart Letter</span>
+              <span className="text-[10px] text-blue-400 font-bold block">SMKN 2 Tikep</span>
+            </div>
           </div>
 
 
@@ -207,6 +213,9 @@ function App() {
           </Suspense>
         </main>
       </div>
+
+      {/* PWA Offline & Install Prompt */}
+      <PWAInstallPrompt />
     </div>
   );
 }
