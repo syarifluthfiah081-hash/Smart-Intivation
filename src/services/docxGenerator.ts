@@ -14,6 +14,23 @@ import {
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { formatDateIndo } from '../templates/letterTemplates';
 
+// Standar borderless untuk tabel metadata, list, dan tanda tangan agar TIDAK ada kotak-kotak di MS Word
+const BORDERLESS_TABLE = {
+  top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+};
+
+const BORDERLESS_CELL = {
+  top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+  right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+};
+
 // Helper to convert base64 data url to Uint8Array for docx ImageRun
 function base64ToUint8Array(base64: string): Uint8Array | null {
   if (!base64 || typeof base64 !== 'string') return null;
@@ -87,10 +104,11 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
           );
         }
 
-        // 2. Table Element
+        // 2. Table Element (Metadata, Panggilan, Izin List)
         else if (tagName === 'table') {
           const trs = el.querySelectorAll('tr');
           const tableRows: TableRow[] = [];
+          const isExplicitBorderedTable = el.classList.contains('border') || el.classList.contains('border-black');
 
           trs.forEach(tr => {
             const tds = tr.querySelectorAll('td, th');
@@ -99,28 +117,23 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
             tds.forEach((td, idx) => {
               const text = td.textContent?.trim() || '';
               const isBold = td.querySelector('strong, b') !== null;
-              const hasBorder = el.classList.contains('border') || td.classList.contains('border');
+              const hasCellBorder = isExplicitBorderedTable || td.classList.contains('border');
 
               cells.push(
                 new TableCell({
                   width: { 
-                    size: idx === 0 && tds.length > 1 ? 30 : idx === 1 && tds.length === 2 ? 70 : Math.floor(100 / tds.length), 
+                    size: idx === 0 && tds.length > 1 ? 28 : idx === 1 && tds.length === 2 ? 72 : Math.floor(100 / tds.length), 
                     type: WidthType.PERCENTAGE 
                   },
-                  borders: hasBorder ? {
+                  borders: hasCellBorder ? {
                     top: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
                     bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
                     left: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
                     right: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
-                  } : {
-                    top: { style: BorderStyle.NONE },
-                    bottom: { style: BorderStyle.NONE },
-                    left: { style: BorderStyle.NONE },
-                    right: { style: BorderStyle.NONE },
-                  },
+                  } : BORDERLESS_CELL,
                   children: [
                     new Paragraph({
-                      spacing: { after: 60, line: 260 },
+                      spacing: { before: 30, after: 30, line: 260 },
                       children: [
                         new TextRun({
                           text,
@@ -144,6 +157,7 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
             elements.push(
               new Table({
                 width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: isExplicitBorderedTable ? undefined : BORDERLESS_TABLE,
                 rows: tableRows,
               })
             );
@@ -152,18 +166,16 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
 
         // 3. Paragraph & Div elements
         else if (tagName === 'p' || tagName === 'div' || tagName === 'li') {
-          // If it's a container box (border & padding)
-          const isBox = el.classList.contains('border') || el.classList.contains('bg-slate-50');
-          const isCentered = el.classList.contains('text-center') || el.style.textAlign === 'center';
-          const isRight = el.classList.contains('text-right') || el.style.textAlign === 'right';
-          const isJustify = el.classList.contains('text-justify') || el.style.textAlign === 'justify';
-          const isIndented = el.classList.contains('indent-8') || el.classList.contains('ml-6');
-
-          // If container contains nested tables or child divs, process children
+          // If container contains nested tables or child headings, process children
           if (el.querySelector('table, h1, h2, h3, h4') && tagName === 'div') {
             Array.from(el.childNodes).forEach(child => processNode(child));
             return;
           }
+
+          const isCentered = el.classList.contains('text-center') || el.style.textAlign === 'center';
+          const isRight = el.classList.contains('text-right') || el.style.textAlign === 'right';
+          const isJustify = el.classList.contains('text-justify') || el.style.textAlign === 'justify';
+          const isIndented = el.classList.contains('indent-8') || el.classList.contains('ml-6');
 
           const text = el.textContent?.trim() || '';
           if (text) {
@@ -179,7 +191,7 @@ function parseHtmlToDocxElements(html: string): (Paragraph | Table)[] {
                   ? AlignmentType.JUSTIFIED 
                   : AlignmentType.LEFT,
                 indent: isIndented ? { left: 480 } : undefined,
-                spacing: { before: isBox ? 80 : 40, after: isBox ? 80 : 100, line: 276 },
+                spacing: { before: 40, after: 100, line: 276 },
                 children: [
                   new TextRun({
                     text,
@@ -250,7 +262,7 @@ export const exportToDocx = async (
     }
   }
 
-  // 2. Kop Surat Table
+  // 2. Kop Surat Table (HANYA garis bawah ganda, tidak ada garis kotak keliling)
   const kopRows = [
     new TableRow({
       children: [
@@ -259,9 +271,9 @@ export const exportToDocx = async (
           width: { size: 16, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
-            top: { style: BorderStyle.NONE },
-            left: { style: BorderStyle.NONE },
-            right: { style: BorderStyle.NONE },
+            top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
           },
           children: leftLogoRun.length > 0 ? leftLogoRun : [new Paragraph({ text: '' })],
         }),
@@ -271,9 +283,9 @@ export const exportToDocx = async (
           width: { size: 68, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
-            top: { style: BorderStyle.NONE },
-            left: { style: BorderStyle.NONE },
-            right: { style: BorderStyle.NONE },
+            top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
           },
           children: [
             ...(profile.foundationName ? [
@@ -320,9 +332,9 @@ export const exportToDocx = async (
           width: { size: 16, type: WidthType.PERCENTAGE },
           borders: {
             bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
-            top: { style: BorderStyle.NONE },
-            left: { style: BorderStyle.NONE },
-            right: { style: BorderStyle.NONE },
+            top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
           },
           children: rightLogoRun.length > 0 ? rightLogoRun : [new Paragraph({ text: '' })],
         }),
@@ -332,17 +344,25 @@ export const exportToDocx = async (
 
   const kopTable = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
+    borders: {
+      top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      bottom: { style: BorderStyle.DOUBLE, size: 24, color: '000000' },
+      left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+    },
     rows: kopRows,
   });
 
-  // 3. Body Content
+  // 3. Body Content Elements
   let bodyElements: (Paragraph | Table)[] = [];
 
   if (customBodyHtml) {
     bodyElements = parseHtmlToDocxElements(customBodyHtml);
   }
 
-  // 4. Signature Table (Mengetahui & Kepala Sekolah)
+  // 4. Signature Table (BERSIH borderless tanpa kotak-kotak)
   const dateStr = `Tidore, ${formatDateIndo(variables.tanggal_surat || variables.tanggal_sk || variables.tanggal_diterima || new Date().toISOString())}`;
   
   const isDisposisi = templateName.toLowerCase().includes('disposisi');
@@ -353,27 +373,18 @@ export const exportToDocx = async (
   if (!isPernyataan && !isDisposisi) {
     signatureTable = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: BORDERLESS_TABLE,
       rows: [
         new TableRow({
           children: [
             new TableCell({
               width: { size: 55, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
+              borders: BORDERLESS_CELL,
               children: [new Paragraph({ text: '' })],
             }),
             new TableCell({
               width: { size: 45, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
+              borders: BORDERLESS_CELL,
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
@@ -394,17 +405,13 @@ export const exportToDocx = async (
   } else if (isDisposisi) {
     signatureTable = new Table({
       width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: BORDERLESS_TABLE,
       rows: [
         new TableRow({
           children: [
             new TableCell({
               width: { size: 50, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
+              borders: BORDERLESS_CELL,
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
@@ -418,12 +425,7 @@ export const exportToDocx = async (
             }),
             new TableCell({
               width: { size: 50, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.NONE },
-                bottom: { style: BorderStyle.NONE },
-                left: { style: BorderStyle.NONE },
-                right: { style: BorderStyle.NONE },
-              },
+              borders: BORDERLESS_CELL,
               children: [
                 new Paragraph({
                   alignment: AlignmentType.CENTER,

@@ -49,14 +49,128 @@ export const exportToPdf = async (
   element.style.border = 'none';
 
   try {
-    // 2. Render ke canvas dengan resolusi tinggi
+    // 2. Render ke canvas dengan resolusi tinggi dan proteksi sanitasi OKLCH untuk Tailwind 4
     const canvas = await html2canvas(element, {
-      scale: 2.5, // 300 DPI clarity
+      scale: 2.5, // 300 DPI high clarity
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
       windowWidth: element.offsetWidth || 794,
+      onclone: (clonedDoc: Document) => {
+        // Hapus link stylesheet eksternal Tailwind 4 yang mengandung fungsi oklch()
+        // agar parser html2canvas tidak error "unsupported color function oklch"
+        const links = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+        links.forEach(link => link.remove());
+
+        // Sanitasi semua tag <style> di dalam dokumen klon
+        const styleTags = clonedDoc.querySelectorAll('style');
+        styleTags.forEach(styleTag => {
+          if (styleTag.innerHTML) {
+            styleTag.innerHTML = styleTag.innerHTML.replace(/oklch\([^)]+\)/gi, '#1e293b');
+          }
+        });
+
+        // Suntikkan CSS resmi murni bebas oklch khusus untuk rendering surat dinas
+        const cleanStyle = clonedDoc.createElement('style');
+        cleanStyle.innerHTML = `
+          * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          body, html {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            font-family: "Times New Roman", Times, serif !important;
+            margin: 0;
+            padding: 0;
+          }
+          .paper-preview {
+            background: #ffffff !important;
+            color: #000000 !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0 auto !important;
+            padding: 20mm !important;
+            width: 210mm !important;
+            font-family: "Times New Roman", Times, serif !important;
+          }
+          .paper-a4 {
+            width: 210mm !important;
+            min-height: 297mm !important;
+          }
+          .paper-f4 {
+            width: 215mm !important;
+            min-height: 330mm !important;
+          }
+          .kop-line {
+            border-top: 2.5px solid #000000 !important;
+            border-bottom: 0.8px solid #000000 !important;
+            height: 2px !important;
+            margin-top: 4px !important;
+            margin-bottom: 14px !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .editable-box, .editable-active {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+          }
+          td, th {
+            color: #000000 !important;
+          }
+          h1, h2, h3, h4, h5, h6, p, span, strong, b, u, em, td, th {
+            color: #000000 !important;
+            font-family: "Times New Roman", Times, serif !important;
+          }
+          .text-center { text-align: center !important; }
+          .text-right { text-align: right !important; }
+          .text-left { text-align: left !important; }
+          .text-justify { text-align: justify !important; }
+          .font-bold, strong, b { font-weight: bold !important; }
+          .underline { text-decoration: underline !important; }
+          .uppercase { text-transform: uppercase !important; }
+          .indent-8 { text-indent: 2rem !important; }
+          .flex { display: flex !important; }
+          .justify-between { justify-content: space-between !important; }
+          .justify-end { justify-content: flex-end !important; }
+          .items-center { align-items: center !important; }
+          .items-start { align-items: flex-start !important; }
+          .border { border: 1px solid #000000 !important; }
+          .border-black { border-color: #000000 !important; }
+          .p-3 { padding: 0.75rem !important; }
+          .mt-1 { margin-top: 0.25rem !important; }
+          .mt-2 { margin-top: 0.5rem !important; }
+          .mt-4 { margin-top: 1rem !important; }
+          .mt-6 { margin-top: 1.5rem !important; }
+          .mt-8 { margin-top: 2rem !important; }
+          .mb-2 { margin-bottom: 0.5rem !important; }
+          .mb-3 { margin-bottom: 0.75rem !important; }
+          .mb-4 { margin-bottom: 1rem !important; }
+          .mb-5 { margin-bottom: 1.25rem !important; }
+          .mb-8 { margin-bottom: 2rem !important; }
+          .ml-6 { margin-left: 1.5rem !important; }
+          .w-full { width: 100% !important; }
+        `;
+        clonedDoc.head.appendChild(cleanStyle);
+
+        // Bersihkan inline style pada semua elemen klon
+        const allClonedElements = clonedDoc.querySelectorAll<HTMLElement>('*');
+        allClonedElements.forEach(el => {
+          const s = el.getAttribute('style');
+          if (s && s.includes('oklch')) {
+            el.setAttribute('style', s.replace(/oklch\([^)]+\)/gi, '#000000'));
+          }
+        });
+      }
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
