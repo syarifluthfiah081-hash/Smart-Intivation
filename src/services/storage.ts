@@ -96,21 +96,31 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data = docSnap.data() as SchoolProfile;
-      const merged = {
+      const merged: SchoolProfile = {
         ...DEFAULT_PROFILE,
         ...data,
+        deptName: (data.deptName && data.deptName.includes('DINAS PENDIDIKAN')) 
+          ? data.deptName 
+          : DEFAULT_PROFILE.deptName,
         logoUrl: data.logoUrl || DEFAULT_PROFILE.logoUrl,
         logoKananUrl: data.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+        signatureBarcodeUrl: data.signatureBarcodeUrl || DEFAULT_PROFILE.signatureBarcodeUrl,
+        useSignatureBarcode: data.useSignatureBarcode !== undefined ? data.useSignatureBarcode : true,
       };
       saveLocalProfile(merged); // Sync to localStorage
       return merged;
     } else {
       const localData = getLocalProfile();
-      const profileToSave = {
+      const profileToSave: SchoolProfile = {
         ...DEFAULT_PROFILE,
         ...(localData || {}),
+        deptName: (localData?.deptName && localData.deptName.includes('DINAS PENDIDIKAN')) 
+          ? localData.deptName 
+          : DEFAULT_PROFILE.deptName,
         logoUrl: localData?.logoUrl || DEFAULT_PROFILE.logoUrl,
         logoKananUrl: localData?.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+        signatureBarcodeUrl: localData?.signatureBarcodeUrl || DEFAULT_PROFILE.signatureBarcodeUrl,
+        useSignatureBarcode: localData?.useSignatureBarcode !== undefined ? localData.useSignatureBarcode : true,
       };
       setDoc(docRef, profileToSave).catch(() => {});
       saveLocalProfile(profileToSave);
@@ -126,8 +136,13 @@ const fetchSchoolProfileRaw = async (): Promise<SchoolProfile> => {
     return {
       ...DEFAULT_PROFILE,
       ...(local || {}),
+      deptName: (local?.deptName && local.deptName.includes('DINAS PENDIDIKAN')) 
+        ? local.deptName 
+        : DEFAULT_PROFILE.deptName,
       logoUrl: local?.logoUrl || DEFAULT_PROFILE.logoUrl,
       logoKananUrl: local?.logoKananUrl || DEFAULT_PROFILE.logoKananUrl,
+      signatureBarcodeUrl: local?.signatureBarcodeUrl || DEFAULT_PROFILE.signatureBarcodeUrl,
+      useSignatureBarcode: local?.useSignatureBarcode !== undefined ? local.useSignatureBarcode : true,
     };
   }
 };

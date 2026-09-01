@@ -14,6 +14,7 @@ import type { LetterTemplate } from '../templates/letterTemplates';
 import { exportToPdf } from '../services/pdfGenerator';
 import { exportToDocx } from '../services/docxGenerator';
 import { LOGO_KIRI_DEFAULT, LOGO_KANAN_DEFAULT } from '../assets/defaultLogos';
+import { BARCODE_KEPSEK_DEFAULT } from '../assets/defaultSignature';
 import { 
   Printer, 
   FileDown, 
@@ -31,7 +32,8 @@ import {
   AlignJustify,
   Check,
   Code,
-  CheckCircle2
+  CheckCircle2,
+  QrCode
 } from 'lucide-react';
 
 interface CreateLetterProps {
@@ -79,6 +81,8 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
           ...data,
           logoUrl: data.logoUrl || LOGO_KIRI_DEFAULT,
           logoKananUrl: data.logoKananUrl || LOGO_KANAN_DEFAULT,
+          signatureBarcodeUrl: data.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT,
+          useSignatureBarcode: data.useSignatureBarcode !== undefined ? data.useSignatureBarcode : true,
         };
         setProfile(fullData);
       } catch (err) {
@@ -220,6 +224,19 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
       const updated = side === 'kiri' 
         ? { ...prev, logoUrl: base64 } 
         : { ...prev, logoKananUrl: base64 };
+      saveSchoolProfile(updated).catch(() => {});
+      return updated;
+    });
+  };
+
+  const handleToggleBarcode = (forceState?: boolean) => {
+    setProfile(prev => {
+      const nextState = forceState !== undefined ? forceState : (prev.useSignatureBarcode === false ? true : false);
+      const updated = { 
+        ...prev, 
+        useSignatureBarcode: nextState,
+        signatureBarcodeUrl: prev.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT 
+      };
       saveSchoolProfile(updated).catch(() => {});
       return updated;
     });
@@ -440,6 +457,90 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
             </div>
           </div>
 
+          {/* DEDICATED BARCODE TTD KEPSEK SECTION (SANGAT JELAS & MUDAH DITEMUKAN) */}
+          <div className="bg-gradient-to-br from-white to-blue-50/40 border-2 border-blue-200/80 rounded-2xl shadow-sm p-5 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-600 text-white rounded-xl shadow-sm">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                    Tanda Tangan Barcode Kepsek
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Sisipkan QR Code otomatis di atas nama Kepala Sekolah
+                  </p>
+                </div>
+              </div>
+              
+              <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                profile.useSignatureBarcode !== false
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  : 'bg-slate-100 text-slate-500 border-slate-200'
+              }`}>
+                {profile.useSignatureBarcode !== false ? 'AKTIF' : 'NONAKTIF'}
+              </span>
+            </div>
+
+            <div className="p-3 bg-white border border-blue-100 rounded-xl flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-lg border border-slate-200 bg-slate-50 p-1 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <img 
+                  src={profile.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT} 
+                  alt="Barcode Preview" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+
+              <div className="flex-1 space-y-1.5">
+                <button
+                  type="button"
+                  id="btn-masukkan-barcode-ttd"
+                  onClick={() => handleToggleBarcode()}
+                  className={`w-full py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                    profile.useSignatureBarcode !== false
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20 animate-pulse'
+                  }`}
+                >
+                  <QrCode className="w-4 h-4" />
+                  <span>
+                    {profile.useSignatureBarcode !== false 
+                      ? '✓ Barcode TTD Terpasang (Klik untuk Nonaktifkan)' 
+                      : '✨ Masukkan Barcode TTD Kepsek'}
+                  </span>
+                </button>
+
+                <div className="flex items-center justify-between text-[10px] text-slate-500 px-0.5">
+                  <label className="text-blue-600 hover:underline font-semibold cursor-pointer">
+                    <span>Ganti Gambar Barcode</span>
+                    <input
+                      type="file"
+                      accept=".png, .jpg, .jpeg, .webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64 = reader.result as string;
+                            setProfile(prev => {
+                              const upd = { ...prev, signatureBarcodeUrl: base64, useSignatureBarcode: true };
+                              saveSchoolProfile(upd).catch(() => {});
+                              return upd;
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                  <span>Ukuran: 58×58 px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Dynamic Variable Inputs Form */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -632,6 +733,22 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Barcode Signature Toggle Button */}
+                <button
+                  type="button"
+                  id="btn-toggle-barcode-ttd"
+                  onClick={() => handleToggleBarcode()}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
+                    profile.useSignatureBarcode !== false
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 shadow-sm'
+                      : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                  }`}
+                  title="Klik untuk menyisipkan atau menyembunyikan Barcode QR Tanda Tangan Kepala Sekolah"
+                >
+                  <QrCode className={`w-3.5 h-3.5 ${profile.useSignatureBarcode !== false ? 'text-emerald-600' : 'text-slate-500'}`} />
+                  <span>{profile.useSignatureBarcode !== false ? 'Barcode TTD Aktif' : '+ Sisipkan Barcode TTD'}</span>
+                </button>
+
                 {/* HTML Source Editor Toggle */}
                 <button
                   type="button"
@@ -658,9 +775,8 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                   title="Klik untuk mengaktifkan/menonaktifkan mode ketik langsung"
                 >
                   <Edit3 className="w-3 h-3 text-blue-600" />
-                  <span>{isInlineEditing ? 'Mode Ketik Langsung Aktif' : 'Mode Pratinjau Terkunci'}</span>
+                  <span>{isInlineEditing ? 'Mode Ketik Aktif' : 'Terkunci'}</span>
                 </button>
-
               </div>
             </div>
 
@@ -716,13 +832,73 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                         Kepala Sekolah,
                       </p>
                       
-                      {/* Space for signing - Guaranteed 60px height in PDF/Print */}
-                      <div 
-                        style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
-                        className="sig-spacer h-[60px] min-h-[60px]"
-                      >
-                        &nbsp;
-                      </div>
+                      {/* Space for signing or Barcode TTD - Guaranteed 60-65px height */}
+                      {profile.useSignatureBarcode !== false ? (
+                        <div className="relative group/sig h-[65px] min-h-[65px] flex flex-col items-center justify-center my-0.5">
+                          <img 
+                            src={profile.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT} 
+                            alt="Barcode TTD Kepala Sekolah" 
+                            className="sig-barcode-img w-[58px] h-[58px] max-w-[58px] max-h-[58px] object-contain mx-auto block"
+                          />
+                          <span className="text-[7.5px] font-sans text-slate-400 no-print uppercase tracking-wider -mt-0.5 block">
+                            Ttd. Elektronik
+                          </span>
+                          {isInlineEditing && (
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/sig:opacity-100 flex items-center justify-center gap-1.5 rounded transition-opacity no-print">
+                              <label className="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-[9px] font-sans font-bold cursor-pointer shadow">
+                                Ganti
+                                <input
+                                  type="file"
+                                  accept=".png, .jpg, .jpeg, .webp"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        const base64 = reader.result as string;
+                                        setProfile(prev => {
+                                          const upd = { ...prev, signatureBarcodeUrl: base64, useSignatureBarcode: true };
+                                          saveSchoolProfile(upd).catch(() => {});
+                                          return upd;
+                                        });
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleBarcode(false)}
+                                className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[9px] font-sans font-bold cursor-pointer shadow"
+                                title="Sembunyikan Barcode"
+                              >
+                                Sembunyikan
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div 
+                          style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
+                          className="sig-spacer h-[60px] min-h-[60px] relative flex items-center justify-center"
+                        >
+                          <span className="select-none text-transparent print-only">&nbsp;</span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleBarcode(true)}
+                            className="w-full h-full border-2 border-dashed border-blue-400 bg-blue-50/70 hover:bg-blue-100/80 rounded-lg text-blue-700 text-[11px] font-sans font-bold flex flex-col items-center justify-center gap-0.5 leading-none transition-all no-print cursor-pointer shadow-sm hover:scale-[1.02]"
+                            title="Klik untuk memasukkan tanda tangan barcode resmi Kepala Sekolah"
+                          >
+                            <div className="flex items-center gap-1">
+                              <QrCode className="w-4 h-4 text-blue-600" />
+                              <span>+ Masukkan Barcode TTD</span>
+                            </div>
+                            <span className="text-[8.5px] text-blue-500 font-normal">Klik untuk menyisipkan QR TTD</span>
+                          </button>
+                        </div>
+                      )}
                       
                       <p 
                         contentEditable={isInlineEditing}
@@ -785,12 +961,39 @@ export const CreateLetter: React.FC<CreateLetterProps> = ({
                       >
                         Kepala Sekolah,
                       </p>
-                      <div 
-                        style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
-                        className="sig-spacer h-[60px] min-h-[60px]"
-                      >
-                        &nbsp;
-                      </div>
+                      
+                      {profile.useSignatureBarcode !== false ? (
+                        <div className="relative group/sig h-[65px] min-h-[65px] flex flex-col items-center justify-center my-0.5">
+                          <img 
+                            src={profile.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT} 
+                            alt="Barcode TTD Kepala Sekolah" 
+                            className="sig-barcode-img w-[58px] h-[58px] max-w-[58px] max-h-[58px] object-contain mx-auto block"
+                          />
+                          <span className="text-[7.5px] font-sans text-slate-400 no-print uppercase tracking-wider -mt-0.5 block">
+                            Ttd. Elektronik
+                          </span>
+                        </div>
+                      ) : (
+                        <div 
+                          style={{ height: '60px', minHeight: '60px', lineHeight: '60px' }} 
+                          className="sig-spacer h-[60px] min-h-[60px] relative flex items-center justify-center"
+                        >
+                          <span className="select-none text-transparent print-only">&nbsp;</span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleBarcode(true)}
+                            className="w-full h-full border-2 border-dashed border-blue-400 bg-blue-50/70 hover:bg-blue-100/80 rounded-lg text-blue-700 text-[11px] font-sans font-bold flex flex-col items-center justify-center gap-0.5 leading-none transition-all no-print cursor-pointer shadow-sm hover:scale-[1.02]"
+                            title="Klik untuk memasukkan tanda tangan barcode resmi Kepala Sekolah"
+                          >
+                            <div className="flex items-center gap-1">
+                              <QrCode className="w-4 h-4 text-blue-600" />
+                              <span>+ Masukkan Barcode TTD</span>
+                            </div>
+                            <span className="text-[8.5px] text-blue-500 font-normal">Klik untuk menyisipkan QR TTD</span>
+                          </button>
+                        </div>
+                      )}
+
                       <p 
                         contentEditable={isInlineEditing}
                         suppressContentEditableWarning={true}

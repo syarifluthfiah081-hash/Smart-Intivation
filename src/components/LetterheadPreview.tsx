@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { School, Camera } from 'lucide-react';
 import { removeBlackBackground } from '../utils/imageProcess';
 import { LOGO_KIRI_DEFAULT, LOGO_KANAN_DEFAULT } from '../assets/defaultLogos';
+import { BARCODE_KEPSEK_DEFAULT } from '../assets/defaultSignature';
 
 export interface SchoolProfile {
   schoolName: string;
@@ -17,6 +18,8 @@ export interface SchoolProfile {
   logoKananUrl?: string; // Logo Kanan (Biru - SMK Negeri 2 Kota Tidore Kepulauan)
   principalName: string;
   principalNip: string;
+  signatureBarcodeUrl?: string; // Barcode / QR Code TTD Kepala Sekolah
+  useSignatureBarcode?: boolean; // Toggle aktifkan barcode otomatis
 }
 
 export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
@@ -33,6 +36,8 @@ export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   logoKananUrl: LOGO_KANAN_DEFAULT,
   principalName: 'Ali Djumati.S.Pd.,M.Si',
   principalNip: '1977601062003121005',
+  signatureBarcodeUrl: BARCODE_KEPSEK_DEFAULT,
+  useSignatureBarcode: true,
 };
 
 interface LetterheadPreviewProps {
@@ -48,11 +53,20 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
   onKopChange,
   onLogoChange
 }) => {
+  const normalizedDeptName = (profile?.deptName && profile.deptName.includes('DINAS PENDIDIKAN'))
+    ? profile.deptName
+    : (profile?.deptName 
+        ? `${profile.deptName}\nDINAS PENDIDIKAN DAN KEBUDAYAAN` 
+        : DEFAULT_SCHOOL_PROFILE.deptName);
+
   const data: SchoolProfile = {
     ...DEFAULT_SCHOOL_PROFILE,
     ...profile,
+    deptName: normalizedDeptName,
     logoUrl: profile?.logoUrl !== undefined && profile?.logoUrl !== '' ? profile.logoUrl : LOGO_KIRI_DEFAULT,
     logoKananUrl: profile?.logoKananUrl !== undefined && profile?.logoKananUrl !== '' ? profile.logoKananUrl : LOGO_KANAN_DEFAULT,
+    signatureBarcodeUrl: profile?.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT,
+    useSignatureBarcode: profile?.useSignatureBarcode !== undefined ? profile.useSignatureBarcode : true,
   };
 
   const [processedLogoKiri, setProcessedLogoKiri] = useState<string>(data.logoUrl || LOGO_KIRI_DEFAULT);
@@ -161,10 +175,14 @@ export const LetterheadPreview: React.FC<LetterheadPreviewProps> = ({
                 contentEditable={isEditable}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => onKopChange && onKopChange('deptName', e.currentTarget.innerText.trim())}
-                className="kop-dept text-[13.5px] md:text-[14.5px] uppercase font-bold leading-tight whitespace-pre-line tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
-                style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '14.5px', fontWeight: 'bold', lineHeight: '1.2', textTransform: 'uppercase', color: '#000000', margin: 0, padding: 0 }}
+                className="kop-dept text-[12.5px] md:text-[13.5px] uppercase font-bold leading-snug tracking-normal text-black outline-none focus:bg-blue-50/60 rounded px-1 my-0"
+                style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '13.5px', fontWeight: 'bold', lineHeight: '1.25', textTransform: 'uppercase', color: '#000000', margin: 0, padding: 0 }}
               >
-                {data.deptName}
+                {(data.deptName || 'PEMERINTAH PROVINSI MALUKU UTARA\nDINAS PENDIDIKAN DAN KEBUDAYAAN').split('\n').map((line, idx) => (
+                  <div key={idx} className="kop-dept-line whitespace-nowrap block my-0 p-0" style={{ whiteSpace: 'nowrap' }}>
+                    {line}
+                  </div>
+                ))}
               </div>
 
               <h3 

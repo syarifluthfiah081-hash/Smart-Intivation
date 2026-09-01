@@ -14,6 +14,7 @@ import {
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { formatDateIndo } from '../templates/letterTemplates';
 import { removeBlackBackground } from '../utils/imageProcess';
+import { BARCODE_KEPSEK_DEFAULT } from '../assets/defaultSignature';
 
 // Standar borderless untuk tabel metadata, list, dan tanda tangan agar TIDAK ada kotak-kotak di MS Word
 const BORDERLESS_TABLE = {
@@ -434,6 +435,11 @@ export const exportToDocx = async (
   const isDisposisi = templateName.toLowerCase().includes('disposisi');
   const isPernyataan = templateName.toLowerCase().includes('pernyataan');
 
+  const barcodeBase64 = (profile.useSignatureBarcode !== false)
+    ? (profile.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT)
+    : null;
+  const barcodeBytes = barcodeBase64 ? base64ToUint8Array(barcodeBase64) : null;
+
   let signatureTable: Table | null = null;
 
   if (!isPernyataan && !isDisposisi) {
@@ -459,9 +465,28 @@ export const exportToDocx = async (
                     new TextRun({ text: 'Kepala Sekolah,', font: 'Times New Roman', size: 22 }),
                   ],
                 }),
+                barcodeBytes ? (
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 100, after: 100 },
+                    children: [
+                      new ImageRun({
+                        data: barcodeBytes,
+                        transformation: { width: 55, height: 55 },
+                        type: 'png',
+                      }),
+                    ],
+                  })
+                ) : (
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 1200 }, // Ruang tanda tangan fisik (~5 baris)
+                    children: [new TextRun({ text: '' })],
+                  })
+                ),
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
-                  spacing: { before: 1200 }, // Ruang tanda tangan fisik (~5 baris)
+                  spacing: { line: 240 },
                   children: [
                     new TextRun({ text: profile.principalName || 'Ali Djumati.S.Pd.,M.Si', bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
                   ],
@@ -521,9 +546,27 @@ export const exportToDocx = async (
                     new TextRun({ text: 'Kepala Sekolah,', font: 'Times New Roman', size: 22 }),
                   ],
                 }),
+                barcodeBytes ? (
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 100, after: 100 },
+                    children: [
+                      new ImageRun({
+                        data: barcodeBytes,
+                        transformation: { width: 55, height: 55 },
+                        type: 'png',
+                      }),
+                    ],
+                  })
+                ) : (
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 1200 },
+                    children: [new TextRun({ text: '' })],
+                  })
+                ),
                 new Paragraph({
                   alignment: AlignmentType.CENTER,
-                  spacing: { before: 1200 },
                   children: [
                     new TextRun({ text: profile.principalName || 'Ali Djumati.S.Pd.,M.Si', bold: true, underline: {}, font: 'Times New Roman', size: 22 }),
                   ],

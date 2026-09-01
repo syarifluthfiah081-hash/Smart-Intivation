@@ -157,13 +157,25 @@ export const exportToPdf = async (
           }
           .kop-dept {
             font-family: "Times New Roman", Times, serif !important;
-            font-size: 14.5px !important;
+            font-size: 13.5px !important;
             font-weight: bold !important;
-            line-height: 1.2 !important;
+            line-height: 1.25 !important;
             text-transform: uppercase !important;
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
+          }
+          .kop-dept-line {
+            display: block !important;
+            white-space: nowrap !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.25 !important;
+            color: #000000 !important;
+            font-family: "Times New Roman", Times, serif !important;
+            font-size: 13.5px !important;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
           }
           .kop-school {
             font-family: "Times New Roman", Times, serif !important;
@@ -195,6 +207,19 @@ export const exportToPdf = async (
             margin-top: 6px !important;
             margin-bottom: 20px !important;
             width: 100% !important;
+          }
+
+          /* Barcode TTD Gambar Presisi di PDF */
+          .sig-barcode-img, img.sig-barcode-img {
+            width: 58px !important;
+            height: 58px !important;
+            max-width: 58px !important;
+            max-height: 58px !important;
+            min-width: 58px !important;
+            min-height: 58px !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 2px auto !important;
           }
 
           /* Ruang Tanda Tangan Kokoh 60px */

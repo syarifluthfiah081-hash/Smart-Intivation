@@ -3,7 +3,8 @@ import { getSchoolProfile, saveSchoolProfile } from '../services/storage';
 import { LetterheadPreview, DEFAULT_SCHOOL_PROFILE } from '../components/LetterheadPreview';
 import type { SchoolProfile } from '../components/LetterheadPreview';
 import { LOGO_KIRI_DEFAULT, LOGO_KANAN_DEFAULT } from '../assets/defaultLogos';
-import { Save, Upload, CheckCircle, Info, Loader2, RotateCcw } from 'lucide-react';
+import { BARCODE_KEPSEK_DEFAULT } from '../assets/defaultSignature';
+import { Save, Upload, CheckCircle, Info, Loader2, RotateCcw, QrCode, Trash2 } from 'lucide-react';
 
 
 
@@ -13,6 +14,7 @@ export const MasterData: React.FC = () => {
   const [toastMsg, setToastMsg] = useState('');
   const [logoKiriPreview, setLogoKiriPreview] = useState<string>(LOGO_KIRI_DEFAULT);
   const [logoKananPreview, setLogoKananPreview] = useState<string>(LOGO_KANAN_DEFAULT);
+  const [barcodePreview, setBarcodePreview] = useState<string>(BARCODE_KEPSEK_DEFAULT);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -26,10 +28,13 @@ export const MasterData: React.FC = () => {
           ...data,
           logoUrl: data.logoUrl || LOGO_KIRI_DEFAULT,
           logoKananUrl: data.logoKananUrl || LOGO_KANAN_DEFAULT,
+          signatureBarcodeUrl: data.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT,
+          useSignatureBarcode: data.useSignatureBarcode !== undefined ? data.useSignatureBarcode : true,
         };
         setProfile(fullData);
         setLogoKiriPreview(fullData.logoUrl || LOGO_KIRI_DEFAULT);
         setLogoKananPreview(fullData.logoKananUrl || LOGO_KANAN_DEFAULT);
+        setBarcodePreview(fullData.signatureBarcodeUrl || BARCODE_KEPSEK_DEFAULT);
       } catch (err) {
         console.error('Gagal mengambil profil sekolah:', err);
       } finally {
@@ -79,11 +84,40 @@ export const MasterData: React.FC = () => {
     }
   };
 
+  const processBarcodeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Format file tidak didukung! Pilih berkas gambar dengan format PNG, JPG, atau JPEG.');
+        return;
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File barcode terlalu besar! Maksimal ukuran berkas adalah 2MB.');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        setBarcodePreview(base64);
+        setProfile(prev => ({ 
+          ...prev, 
+          signatureBarcodeUrl: base64,
+          useSignatureBarcode: true 
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleResetToDefault = () => {
-    if (window.confirm('Reset data profil & logo ke format bawaan resmi SMK Negeri 2 Kota Tidore Kepulauan?')) {
+    if (window.confirm('Reset data profil, logo & barcode tanda tangan ke format bawaan resmi SMK Negeri 2 Kota Tidore Kepulauan?')) {
       setProfile(DEFAULT_SCHOOL_PROFILE);
       setLogoKiriPreview(LOGO_KIRI_DEFAULT);
       setLogoKananPreview(LOGO_KANAN_DEFAULT);
+      setBarcodePreview(BARCODE_KEPSEK_DEFAULT);
     }
   };
 
@@ -363,6 +397,97 @@ export const MasterData: React.FC = () => {
                         Pakai Bawaan Biru
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Barcode TTD Kepala Sekolah (QR Code Otomatis) */}
+            <div className="pt-4 border-t border-slate-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <QrCode className="w-4 h-4 text-blue-600" />
+                    <span>Tanda Tangan Barcode / QR Kepala Sekolah</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Barcode QR resmi ini akan disisipkan secara otomatis dan rapi di area tanda tangan Kepala Sekolah pada seluruh surat.
+                  </p>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <span className="text-[11px] font-bold text-slate-700">
+                    {profile.useSignatureBarcode ? 'Barcode Aktif' : 'Nonaktif'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={profile.useSignatureBarcode !== false}
+                    onChange={(e) => setProfile(p => ({ ...p, useSignatureBarcode: e.target.checked }))}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                  />
+                </label>
+              </div>
+
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Barcode Preview Box */}
+                  <div className="w-24 h-24 rounded-xl border border-slate-300 bg-white flex flex-col items-center justify-center p-2 shadow-inner relative group flex-shrink-0">
+                    {barcodePreview || profile.signatureBarcodeUrl ? (
+                      <img 
+                        src={barcodePreview || profile.signatureBarcodeUrl} 
+                        alt="Barcode TTD Kepsek" 
+                        className="w-full h-full object-contain" 
+                      />
+                    ) : (
+                      <div className="text-center text-slate-400">
+                        <QrCode className="w-8 h-8 mx-auto stroke-1" />
+                        <span className="text-[8px] block mt-1">Belum Ada</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-300 text-xs transition-all cursor-pointer shadow-sm">
+                        <Upload className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Unggah Barcode Baru</span>
+                        <input
+                          type="file"
+                          accept=".png, .jpg, .jpeg, .webp"
+                          onChange={processBarcodeUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBarcodePreview(BARCODE_KEPSEK_DEFAULT);
+                          setProfile(p => ({ ...p, signatureBarcodeUrl: BARCODE_KEPSEK_DEFAULT, useSignatureBarcode: true }));
+                        }}
+                        className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-lg border border-blue-200 text-xs transition-all cursor-pointer"
+                      >
+                        Gunakan Barcode Bawaan
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBarcodePreview('');
+                          setProfile(p => ({ ...p, signatureBarcodeUrl: '', useSignatureBarcode: false }));
+                        }}
+                        className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg border border-rose-200 text-xs transition-all cursor-pointer flex items-center gap-1"
+                        title="Kosongkan barcode (pakai ttd fisik kosong)"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Kosongkan</span>
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500">
+                      Format disarankan: PNG persegi (1:1) dengan resolusi jelas. Tanda tangan QR akan tampak proporsional pada pratinjau, PDF, Word, dan cetak langsung.
+                    </p>
                   </div>
                 </div>
               </div>
